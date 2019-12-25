@@ -13,10 +13,15 @@ Content/AutomotiveMaterials/Textures/Wheel/T_Dirt_N.uasset
 
 # ignore big size animations
 Content/Animations/FBX/*
-Content/Animations/Toy/Alembic/*
+Content/Animations/Toy/Alembic/Male/*
+Content/Animations/Toy/Alembic/Female/*
 Content/Animations/Toy/FBX/Male/*
 Content/Animations/Toy/FBX/Female/*
 
+!Content/Animations/Toy/Alembic/Male/ACrossPunch
+!Content/Animations/Toy/Alembic/Female/ACrossPunch
+!Content/Animations/Toy/Alembic/Male/BlockingWithArm
+!Content/Animations/Toy/Alembic/Female/BlockingWithArm
 !Content/Animations/Toy/FBX/Female/ACrossPunch.uasset
 !Content/Animations/Toy/FBX/Male/ACrossPunch.uasset
 !Content/Animations/Toy/FBX/Female/BlockingWithArm.uasset
