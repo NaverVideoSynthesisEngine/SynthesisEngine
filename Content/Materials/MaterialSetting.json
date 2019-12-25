@@ -1,0 +1,29 @@
+{
+    "Items" :
+    [
+        {
+            "ID" : "Sleeveless",
+            "Slots" : [
+                ["Linen"]
+            ]
+        },
+        {
+            "ID" : "Training_pants",
+            "Slots" : [
+                ["Denim"]
+            ]
+        },
+        {
+            "ID" : "Crew_neck_t-shirt",
+            "Slots" : [
+                ["Linen"]
+            ]
+        },
+        {
+            "ID" : "Vest",
+            "Slots" : [
+                ["Wool"]
+            ]
+        }
+    ]
+}

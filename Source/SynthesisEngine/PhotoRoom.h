@@ -1,0 +1,109 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "SynthesisEngine.h"
+#include "GameFramework/Pawn.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "MaterialPerturberComponent.h"
+#include "CameraPerturberComponent.h"
+#include "DataFlushManager.h"
+#include "Kismet/GameplayStatics.h"
+#include "PhotoRoom.generated.h"
+
+UENUM(BlueprintType)
+enum class EUpdateProtocol : uint8
+{
+	UPDATE_EVERY_FRAME UMETA(DisplayName = "Update Every Frame"),
+	UPDATE_CLOTH_IS_CHANGED UMETA(DisaplyName = "Update if cloth is changed"),
+	UPDATE_COMBINATION_IS_CHANGED UMETA(DisaplyName = "Update if combination is changed"),
+	UPDATE_COMBINATION_ITERATION UMETA(DisaplyName = "Update when combination is being iterated")
+};
+
+UCLASS()
+class SYNTHESISENGINE_API APhotoRoom : public APawn
+{
+	GENERATED_BODY()
+
+private:
+	bool b_FirstUpdate = true;
+	bool b_ShouldUpdate;
+	int LateDataFlushingCount;
+
+	int IterationIndex = 0;
+public:
+	// Sets default values for this pawn's properties
+	APhotoRoom();
+
+	UPROPERTY(EditAnywhere, Category = Debug)
+	bool EnableCameraPerturber = true;
+	UPROPERTY(EditAnywhere, Category = Debug)
+	bool EnableAnimationPerturber = true;
+	UPROPERTY(EditAnywhere, Category = Debug)
+	bool EnableMaterialPerturber = true;
+	UPROPERTY(EditAnywhere, Category = Debug)
+	bool EnableDataFlush = true;
+
+	UPROPERTY(EditAnywhere, Category = Option)
+	bool PerturbCameraAndMaterialOnStart = true;
+
+	UPROPERTY(EditAnywhere, Category = Option)
+	int IterationCount = 1;
+
+	UPROPERTY(EditAnywhere, Category = Option)
+	int LATE_DATA_FLUSHING_Frame_to_Skip = 2;
+
+	UPROPERTY(EditAnywhere, Category = Option)
+	EUpdateProtocol MaterialPerturberUpdateProtocol = EUpdateProtocol::UPDATE_EVERY_FRAME;
+	UPROPERTY(EditAnywhere, Category = Option)
+	EUpdateProtocol CameraPerturberUpdateProtocol = EUpdateProtocol::UPDATE_EVERY_FRAME;
+
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMeshComponent* SkeletalMesh;
+	UPROPERTY(VisibleAnywhere)
+	USkeletalMeshComponent* Garment;
+	UPROPERTY(VisibleAnywhere)
+	UCameraComponent* CameraComponent;
+	UPROPERTY(VisibleAnywhere, Category = SynthesisEngine)
+	class UAnimationPerturberComponent* AnimationPerturber;
+	UPROPERTY(VisibleAnywhere, Category = SynthesisEngine)
+	UCameraPerturberComponent* CameraPerturber;
+	UPROPERTY(VisibleAnywhere, Category = SynthesisEngine)
+	UMaterialPerturberComponent* MaterialPerturber;
+
+	class FDataFlushManager* DataFlushManager;
+
+public: //Multiple Clothes
+	static const int GarmentSocketNumber;
+	UPROPERTY(VisibleAnywhere)
+	TArray<USkeletalMeshComponent*> Garments;
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+	virtual void BeginDestroy() override;
+
+	virtual void PostEditChangeProperty(struct FPropertyChangedEvent& PropertyChangedEvent) override;
+public:
+	virtual void PostInitializeComponents() override;
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+	void Update();
+	void UpdateWithLateDataFlushing();
+
+	void Skip3DModel();
+	void Skip3DModelAnimation();
+	void SkipClothes();
+
+	bool CheckIteration();
+
+public :
+	DECLARE_EVENT(APhotoRoom, FProcessDone)
+	FProcessDone& OnProcessDone() { return ProcessDoneEvent; }
+	FProcessDone ProcessDoneEvent;
+};

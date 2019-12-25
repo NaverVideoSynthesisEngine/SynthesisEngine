@@ -1,0 +1,212 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "PhotoRoom.h"
+#include "AnimationPerturberComponent.h"
+
+const int APhotoRoom::GarmentSocketNumber = 5;
+
+// Sets default values
+APhotoRoom::APhotoRoom()
+{
+	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	PrimaryActorTick.bCanEverTick = true;
+
+	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MainCharacter"));
+	Garment = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Garment"));
+	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+	CameraPerturber = CreateDefaultSubobject<UCameraPerturberComponent>(TEXT("Camera Perturber"));
+	MaterialPerturber = CreateDefaultSubobject<UMaterialPerturberComponent>(TEXT("Material Perturber"));
+	AnimationPerturber = CreateDefaultSubobject<UAnimationPerturberComponent>(TEXT("Animation Perturber"));
+
+	RootComponent = SkeletalMesh;
+	Garment->SetupAttachment(SkeletalMesh);
+	CameraComponent->SetupAttachment(SkeletalMesh);
+	CameraPerturber->SetupAttachment(SkeletalMesh);
+	MaterialPerturber->SetupAttachment(SkeletalMesh);
+	AnimationPerturber->SetupAttachment(SkeletalMesh);
+
+
+
+	for (int i = 0; i < GarmentSocketNumber; i++)
+	{
+		FString ID = FString::Printf(TEXT("Garment%d"), i);
+		USkeletalMeshComponent* TempGarment = CreateDefaultSubobject<USkeletalMeshComponent>(*ID);
+		Garments.Add(TempGarment);
+	}
+
+	LateDataFlushingCount = 0;
+	b_ShouldUpdate = true;
+}
+
+void APhotoRoom::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+	//AnimationPerturber->Init(this->SkeletalMesh, this->Garment); //For Single Clothes
+	//MaterialPerturber->Init(this->SkeletalMesh, this->Garment); //For Single Clothes
+
+	AnimationPerturber->Init(this, this->SkeletalMesh, this->Garments); //For Multiple Clothes
+	MaterialPerturber->Init(this->SkeletalMesh, this->Garments); //For Multiple Clothes
+	CameraPerturber->Init(this->SkeletalMesh, this->CameraComponent);
+
+	AnimationPerturber->OnClothChanged().AddLambda([=]()
+	{
+		if (MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_CLOTH_IS_CHANGED)
+		{
+			MaterialPerturber->Update();
+		}
+		if (CameraPerturberUpdateProtocol == EUpdateProtocol::UPDATE_CLOTH_IS_CHANGED)
+		{
+			CameraPerturber->Update();
+		}
+	});
+	AnimationPerturber->OnGarmentCombinationChanged().AddLambda([=]()
+	{
+		if (MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_COMBINATION_IS_CHANGED)
+		{
+			MaterialPerturber->Update();
+		}
+		if (CameraPerturberUpdateProtocol == EUpdateProtocol::UPDATE_COMBINATION_IS_CHANGED)
+		{
+			CameraPerturber->Update();
+		}
+	});
+	AnimationPerturber->OnGarmentCombinationIteration().AddLambda([=]()
+	{
+		if (MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_COMBINATION_ITERATION)
+		{
+			MaterialPerturber->Update();
+		}
+		if (CameraPerturberUpdateProtocol == EUpdateProtocol::UPDATE_COMBINATION_ITERATION)
+		{
+			CameraPerturber->Update();
+		}
+	});
+	AnimationPerturber->OnProcessDone().AddLambda([=]()
+	{
+		this->ProcessDoneEvent.Broadcast();
+	});
+}
+
+// Called when the game starts or when spawned
+void APhotoRoom::BeginPlay()
+{
+	Super::BeginPlay();
+	DataFlushManager = new FDataFlushManager(Cast<AActor>(this), GetWorld(), this->CameraComponent);
+}
+
+void APhotoRoom::BeginDestroy()
+{
+	Super::BeginDestroy();
+	delete(DataFlushManager);
+}
+
+void APhotoRoom::PostEditChangeProperty(FPropertyChangedEvent& e)
+{
+	FName PropertyName = (e.Property != NULL) ? e.Property->GetFName() : NAME_None;
+
+	/* Enable Property */
+	if (PropertyName == GET_MEMBER_NAME_CHECKED(APhotoRoom, EnableCameraPerturber))
+	{
+		CameraPerturber->OnChangedEnableProperty(EnableCameraPerturber);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(APhotoRoom, EnableAnimationPerturber))
+	{
+		AnimationPerturber->OnChangedEnableProperty(EnableAnimationPerturber);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(APhotoRoom, EnableMaterialPerturber))
+	{
+		MaterialPerturber->OnChangedEnableProperty(EnableMaterialPerturber);
+	}
+	else if (PropertyName == GET_MEMBER_NAME_CHECKED(APhotoRoom, EnableDataFlush))
+	{
+		DataFlushManager->OnChangedEnableProperty(EnableDataFlush);
+	}
+	Super::PostEditChangeProperty(e);
+}
+
+// Called every frame
+void APhotoRoom::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+}
+
+// Called to bind functionality to input
+void APhotoRoom::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+{
+	Super::SetupPlayerInputComponent(PlayerInputComponent);
+//	PlayerInputComponent->BindAction("LoadNextLevel", IE_Pressed, this, &APhotoRoom::DEBUG_LoadNextLevel);
+}
+
+void APhotoRoom::Update()
+{
+	if (EnableAnimationPerturber)
+		AnimationPerturber->Update();
+	if (EnableCameraPerturber && CameraPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+		CameraPerturber->Update();
+	if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+		MaterialPerturber->Update();
+	if (EnableDataFlush) 
+		DataFlushManager->FlushToData(TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs"), *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+	
+	if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
+	{
+		b_FirstUpdate = false;
+		CameraPerturber->Update();
+		MaterialPerturber->Update();
+	}
+}
+
+void APhotoRoom::UpdateWithLateDataFlushing()
+{
+	if (b_ShouldUpdate)
+	{
+		if (EnableAnimationPerturber)
+			AnimationPerturber->Update();
+		if (EnableCameraPerturber && CameraPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+			CameraPerturber->Update();
+		if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+			MaterialPerturber->Update();
+		b_ShouldUpdate = false;
+
+		if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
+		{
+			b_FirstUpdate = false;
+			CameraPerturber->Update();
+			MaterialPerturber->Update();
+		}
+	}
+	else
+	{
+		if(LateDataFlushingCount == LATE_DATA_FLUSHING_Frame_to_Skip)
+		{
+			if (EnableDataFlush)
+				DataFlushManager->FlushToDataCocoFormat(TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs"), *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+			LateDataFlushingCount = 0;
+			b_ShouldUpdate = true;
+		}
+		else
+		{
+			LateDataFlushingCount++;
+		}
+	}
+	
+	
+}
+
+bool APhotoRoom::CheckIteration()
+{
+	IterationIndex++;
+	if (IterationIndex == IterationCount)
+	{
+		IterationIndex = 0;
+		return true; //Should proceed to next animation.
+	}
+	return false; //Repeat this animation.
+}
+
+void APhotoRoom::Skip3DModel() { AnimationPerturber->Skip3DModel(); }
+
+void APhotoRoom::Skip3DModelAnimation() { AnimationPerturber->Skip3DModelAnimation();  }
+
+void APhotoRoom::SkipClothes() { AnimationPerturber->SkipClothes(); }
