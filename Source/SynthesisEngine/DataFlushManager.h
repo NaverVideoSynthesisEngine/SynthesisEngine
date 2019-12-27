@@ -123,17 +123,37 @@ private:
         return threshold[index];
     }
     static FString CocoSkeleton(int index) {
-      FString skeleton[] = { TEXT("Hips"), TEXT("Spine"),TEXT("Spine1"), TEXT("Spine2"),
-          TEXT("LeftShoulder"), TEXT("LeftArm"), TEXT("LeftForeArm"),
-          TEXT("RightShoulder"), TEXT("RightArm"), TEXT("RightForeArm"),
-          TEXT("Neck"), TEXT("Head"),
+      FString skeleton[] = { TEXT("Nose"), TEXT("LeftEye"),TEXT("RightEye"),
+          TEXT("LeftEar"), TEXT("RightEar"),
+          TEXT("LeftArm"), TEXT("LeftForeArm"), TEXT("LeftHand"),
+          TEXT("RightArm"), TEXT("RightForeArm"), TEXT("RightHand"),
           TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"),
           TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"),
       };
+    /*
+        "nose", Nose
+        "left_eye", LeftEye
+        "right_eye", RightEye
+        "left_ear", LeftEar
+        "right_ear", RightEar
+        "left_shoulder", LeftArm
+        "right_shoulder", RightArm
+        "left_elbow", LeftForeArm
+        "right_elbow", RightForeArm
+        "left_wrist", LeftHand
+        "right_wrist", RightHand
+        "left_hip", LeftUpLeg
+        "right_hip", RightUpLeg
+        "left_knee", LeftLeg
+        "right_knee", RightLeg
+        "left_ankle", LeftFoot
+        "right_ankle" RightFoot
+    */
+        
       return skeleton[index];
     }
     static int CocoSkeletonNum(){
-        return 18;
+        return 17;
     }
     
     static int ConvertToCocoVisibility(EJointVisibility visibility)
