@@ -178,10 +178,20 @@ void APhotoRoom::UpdateWithLateDataFlushing()
 	}
 	else
 	{
+        FString path;
+        FString platform = UGameplayStatics::GetPlatformName();
+        if(platform == TEXT("Mac"))
+        {
+            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+        }
+        else
+        {
+            path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
+        }
 		if(LateDataFlushingCount == LATE_DATA_FLUSHING_Frame_to_Skip)
 		{
 			if (EnableDataFlush)
-				DataFlushManager->FlushToDataCocoFormat(TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs"), *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+				DataFlushManager->FlushToDataCocoFormat(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
 			LateDataFlushingCount = 0;
 			b_ShouldUpdate = true;
 		}
