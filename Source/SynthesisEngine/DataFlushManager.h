@@ -35,25 +35,10 @@ public:
 	float z3D;
 };
 
-USTRUCT()
-struct FAnnotation
-{
-GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere)
-	int FrameNum;
-	UPROPERTY(EditAnywhere)
-	TArray<FJoint> Joints;
-	UPROPERTY(EditAnywhere)
-    FVector TComp;
-	UPROPERTY(EditAnywhere)
-    FRotator RComp;
-};
 
 class SYNTHESISENGINE_API FDataFlushManager
 {
 private:
-	TArray<FString> TargetJoints;
 	int dataID;
 
 	UWorld* world;
@@ -63,10 +48,63 @@ public:
 	FDataFlushManager(AActor * Owner, UWorld * World, UCameraComponent* CameraComponent);
 	~FDataFlushManager();
     
-    EJointVisibility VisibilityCheck(FVector location);
+    EJointVisibility VisibilityCheck(FVector location, float threshold, FVector jointLocation);
 	void FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
 	void FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);
 	void OnChangedEnableProperty(bool IsEnable);
+};
+
+USTRUCT()
+struct FDummyAnnotation
+{
+GENERATED_BODY()
+private:
+    static FString Skeleton(int index)
+    {
+        FString VanillaMixamo[] = { TEXT("Hips"), TEXT("Spine"),TEXT("Spine1"), TEXT("Spine2"),
+            TEXT("LeftShoulder"), TEXT("LeftArm"), TEXT("LeftForeArm"),
+            TEXT("RightShoulder"), TEXT("RightArm"), TEXT("RightForeArm"),
+            TEXT("Neck"), TEXT("Head"),
+            TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"),
+            TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"),
+        };
+        return VanillaMixamo[index];
+    }
+    static int SkeletonNum()
+    {
+        return 18;
+    }
+public:
+    UPROPERTY(EditAnywhere)
+    int FrameNum;
+    UPROPERTY(EditAnywhere)
+    TArray<FJoint> Joints;
+    UPROPERTY(EditAnywhere)
+    FVector TComp;
+    UPROPERTY(EditAnywhere)
+    FRotator RComp;
+    
+    FDummyAnnotation() {}
+    FDummyAnnotation(FDataFlushManager * FlushManager, UWorld * World, USkeletalMeshComponent* Mesh, UCameraComponent* Camera, int dataID)
+    {
+        TArray<FJoint> Joints;
+        for (int j = 0; j < SkeletonNum(); j++)
+        {
+            FVector location = Mesh->GetSocketLocation(FName(*Skeleton(j)));
+            FJoint joint;
+            joint.JointType = j;
+            joint.x3D = location.X;
+            joint.y3D = location.Y;
+            joint.z3D = location.Z;
+
+            Joints.Add(joint);
+        }
+
+        this->FrameNum = dataID;
+        this->Joints = Joints;
+        this->TComp = Camera->GetComponentLocation();
+        this->RComp = Camera->GetComponentRotation();
+    }
 };
 
 USTRUCT()
@@ -74,6 +112,16 @@ struct FCocoAnnotation
 {
 GENERATED_BODY()
 private:
+    static float CocoSkeletonThreshold(int index) {
+        float threshold[] = { 10.0f, 10.0f, 10.0f, 10.0f,
+            10.0f, 10.0f, 10.0f,
+            10.0f, 10.0f, 10.0f,
+            10.0f, 10.0f,
+            10.0f, 10.0f, 10.0f,
+            10.0f, 10.0f, 10.0f,
+        };
+        return threshold[index];
+    }
     static FString CocoSkeleton(int index) {
       FString skeleton[] = { TEXT("Hips"), TEXT("Spine"),TEXT("Spine1"), TEXT("Spine2"),
           TEXT("LeftShoulder"), TEXT("LeftArm"), TEXT("LeftForeArm"),
@@ -132,7 +180,7 @@ public:
 
             this->keypoints.Add((int)screenCoord.X);
             this->keypoints.Add((int)screenCoord.Y);
-            this->keypoints.Add(this->ConvertToCocoVisibility(FlushManager->VisibilityCheck(location)));
+            this->keypoints.Add(this->ConvertToCocoVisibility(FlushManager->VisibilityCheck(location, CocoSkeletonThreshold(j), location)));
         }
         this->area = 0;
         this->iscrowd = 0;
