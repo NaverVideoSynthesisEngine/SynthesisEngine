@@ -45,18 +45,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	TArray<FJoint> Joints;
 	UPROPERTY(EditAnywhere)
-		FVector TComp;
+    FVector TComp;
 	UPROPERTY(EditAnywhere)
-		FRotator RComp;
-};
-
-USTRUCT()
-struct FCocoAnnotation
-{
-GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere)
-	TArray<int> keypoints;
+    FRotator RComp;
 };
 
 class SYNTHESISENGINE_API FDataFlushManager
@@ -68,14 +59,84 @@ private:
 	UWorld* world;
 	UCameraComponent* cameraComponent;
 	AActor * owner;
-
-	int GetCocoVisibility(EJointVisibility visibility);
-	EJointVisibility VisibilityCheck(FVector location);
 public:
 	FDataFlushManager(AActor * Owner, UWorld * World, UCameraComponent* CameraComponent);
 	~FDataFlushManager();
-
+    
+    EJointVisibility VisibilityCheck(FVector location);
 	void FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
 	void FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);
 	void OnChangedEnableProperty(bool IsEnable);
+};
+
+USTRUCT()
+struct FCocoAnnotation
+{
+GENERATED_BODY()
+private:
+    static FString CocoSkeleton(int index) {
+      FString skeleton[] = { TEXT("Hips"), TEXT("Spine"),TEXT("Spine1"), TEXT("Spine2"),
+          TEXT("LeftShoulder"), TEXT("LeftArm"), TEXT("LeftForeArm"),
+          TEXT("RightShoulder"), TEXT("RightArm"), TEXT("RightForeArm"),
+          TEXT("Neck"), TEXT("Head"),
+          TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"),
+          TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"),
+      };
+      return skeleton[index];
+    }
+    static int CocoSkeletonNum(){
+        return 18;
+    }
+    
+    static int ConvertToCocoVisibility(EJointVisibility visibility)
+    {
+        switch(visibility)
+        {
+            case EJointVisibility::VISIBLE :
+                return 2;
+            case EJointVisibility::OCCLUDED_BY_HUMAN:
+            case EJointVisibility::OCCLUDED_BY_OBJECT:
+                return 1;
+            case EJointVisibility::OUT_OF_SIGHT:
+                return 0;
+        }
+        UE_LOG(SynthesisEngine, Warning, TEXT("FlushToData :: Error on Coco Format"));
+        return -1;
+    }
+public:
+    UPROPERTY(EditAnywhere)
+    TArray<float> segmentation;
+    UPROPERTY(EditAnywhere)
+    float area;
+    UPROPERTY(EditAnywhere)
+    int iscrowd;
+    UPROPERTY(EditAnywhere)
+    TArray<int> keypoints;
+    UPROPERTY(EditAnywhere)
+    int image_id;
+    UPROPERTY(EditAnywhere)
+    TArray<float> bbox;
+    UPROPERTY(EditAnywhere)
+    int category_id;
+    UPROPERTY(EditAnywhere)
+    int id;
+    
+    FCocoAnnotation(){};
+    FCocoAnnotation(FDataFlushManager * FlushManager, UWorld * World, USkeletalMeshComponent* Mesh, int dataID)
+    {
+        for (int j = 0; j < CocoSkeletonNum(); j++)
+        {
+            FVector location = Mesh->GetSocketLocation(FName(*CocoSkeleton(j)));
+            FVector2D screenCoord;
+            UGameplayStatics::GetPlayerController(World, 0)->ProjectWorldLocationToScreen(location, screenCoord, true);
+
+            this->keypoints.Add((int)screenCoord.X);
+            this->keypoints.Add((int)screenCoord.Y);
+            this->keypoints.Add(this->ConvertToCocoVisibility(FlushManager->VisibilityCheck(location)));
+        }
+        this->area = 0;
+        this->iscrowd = 0;
+        this->category_id = 1;
+        this->id = dataID;
+    }
 };

@@ -29,20 +29,6 @@ FDataFlushManager::~FDataFlushManager()
 {
 }
 
-int FDataFlushManager::GetCocoVisibility(EJointVisibility visibility)
-{
-	switch (visibility)
-	{
-		case EJointVisibility::VISIBLE:
-			return 2;
-		case EJointVisibility::OCCLUDED_BY_OBJECT:
-			return 1;
-		default:
-			break;
-	}
-	return -1;
-}
-
 EJointVisibility FDataFlushManager::VisibilityCheck(FVector location)
 {
 	FCollisionQueryParams collisionParam;
@@ -67,26 +53,17 @@ void FDataFlushManager::FlushToDataCocoFormat(FString path, FString LevelName, F
 
 	FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s_%d.png"), *path, *LevelName, *ActorLabel, dataID);
 	FString jsonPath = *FString::Printf(TEXT("%s/%s/%s_%d.json"), *path, *LevelName, *ActorLabel, dataID);
-
+    UE_LOG(SynthesisEngine, Warning, TEXT("screenshot : %s"), *screenshotPath);
+    UE_LOG(SynthesisEngine, Warning, TEXT("json : %s"), *jsonPath);
+    
 	FScreenshotRequest::RequestScreenshot(screenshotPath, false, false);
-	
-	FCocoAnnotation coco;
-	for (int j = 0; j < TargetJoints.Num(); j++)
-	{
-		FVector location = Mesh->GetSocketLocation(FName(*TargetJoints[j]));
-		FVector2D screenCoord;
-		UGameplayStatics::GetPlayerController(owner->GetWorld(), 0)->ProjectWorldLocationToScreen(location, screenCoord, true);
-
-		coco.keypoints.Add(screenCoord.X);
-		coco.keypoints.Add(screenCoord.Y);
-		//UE_LOG(SynthesisEngine, Warning, TEXT("Joint : %s"), *TargetJoints[j]);
-		coco.keypoints.Add(GetCocoVisibility(VisibilityCheck(location)));
-	}
+	FCocoAnnotation coco(this, world, Mesh, dataID);
 
 	FString jsonstr;
 	FJsonObjectConverter::UStructToJsonObjectString(coco, jsonstr);
 	FFileHelper::SaveStringToFile(*jsonstr, *jsonPath);
-
+    
+    
 	dataID++;
 }
 
@@ -94,7 +71,7 @@ void FDataFlushManager::FlushToData(FString path, FString LevelName, FString Act
 {
 	FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s_%d.png"), *path, *LevelName, *ActorLabel, dataID);
 	FString jsonPath = *FString::Printf(TEXT("%s/%s/%s_%d.json"), *path, *LevelName, *ActorLabel, dataID);
-	// UE_LOG(SynthesisEngine, Warning, TEXT("FlushToData :: Take Photo - %s"), *screenshotPath);
+	// lll
 
 	FScreenshotRequest::RequestScreenshot(screenshotPath, false, false);
 	
