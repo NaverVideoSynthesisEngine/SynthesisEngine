@@ -174,21 +174,11 @@ private:
     }
 public:
     UPROPERTY(EditAnywhere)
-    TArray<float> segmentation;
+    int stencil_value;
     UPROPERTY(EditAnywhere)
-    float area;
-    UPROPERTY(EditAnywhere)
-    int iscrowd;
+    int num_keypoints;
     UPROPERTY(EditAnywhere)
     TArray<int> keypoints;
-    UPROPERTY(EditAnywhere)
-    int image_id;
-    UPROPERTY(EditAnywhere)
-    TArray<float> bbox;
-    UPROPERTY(EditAnywhere)
-    int category_id;
-    UPROPERTY(EditAnywhere)
-    int id;
     
     FCocoAnnotation(){};
     FCocoAnnotation(FDataFlushManager * FlushManager, UWorld * World, USkeletalMeshComponent* Mesh, int dataID)
@@ -203,9 +193,6 @@ public:
             this->keypoints.Add((int)screenCoord.Y);
             this->keypoints.Add(this->ConvertToCocoVisibility(FlushManager->VisibilityCheck(location, CocoSkeletonThreshold(j))));
         }
-        this->area = 0;
-        this->iscrowd = 0;
-        this->category_id = 1;
-        this->id = dataID;
+        this->num_keypoints = CocoSkeletonNum();
     }
 };
