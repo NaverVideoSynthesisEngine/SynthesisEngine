@@ -62,8 +62,9 @@ EJointVisibility FDataFlushManager::VisibilityCheck(FVector location, float thre
 
 void FDataFlushManager::FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
-	FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s_%d.png"), *path, *LevelName, *ActorLabel, dataID);
-	FString jsonPath = *FString::Printf(TEXT("%s/%s/%s_%d.json"), *path, *LevelName, *ActorLabel, dataID);
+    FString fileName = FString::Printf(TEXT("%012d"),dataID);
+	FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s.png"), *path, *LevelName, *fileName);
+	FString jsonPath = *FString::Printf(TEXT("%s/%s/%s.json"), *path, *LevelName, *fileName);
     
 	FScreenshotRequest::RequestScreenshot(screenshotPath, false, false);
 	FCocoAnnotation coco(this, world, Mesh, dataID);
