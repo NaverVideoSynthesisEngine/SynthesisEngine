@@ -19,6 +19,23 @@ EJointVisibility FDataFlushManager::VisibilityCheck(FVector location, float thre
 	FHitResult result;
 	FVector start(cameraComponent->GetComponentLocation());
     
+    const APlayerController* const PlayerController = Cast<const APlayerController>(UGameplayStatics::GetPlayerController(world, 0));
+
+    FVector2D ScreenLocation;
+    PlayerController->ProjectWorldLocationToScreen(location, ScreenLocation);
+    
+    int32 ScreenWidth = 0;
+    int32 ScreenHeight = 0;
+    PlayerController->GetViewportSize(ScreenWidth, ScreenHeight);
+
+    int32 ScreenX = (int32)ScreenLocation.X;
+    int32 ScreenY = (int32)ScreenLocation.Y;
+
+    if(!(ScreenX >= 0 && ScreenY >= 0 && ScreenX < ScreenWidth && ScreenY < ScreenHeight))
+    {
+        return EJointVisibility::OUT_OF_SIGHT;
+    }
+    
 	if (world->LineTraceSingleByChannel(result, start, location, ECC_Visibility, collisionParam))
 	{
         FVector hitPoint = result.Location;
