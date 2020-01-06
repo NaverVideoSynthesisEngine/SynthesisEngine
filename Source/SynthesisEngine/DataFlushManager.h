@@ -6,6 +6,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Runtime/Core/Public/Templates/SharedPointer.h"
 #include "Runtime/JsonUtilities/Public/JsonObjectConverter.h"
+//#include "DrawDebugHelpers.h"
 #include "DataFlushManager.generated.h"
 /**
  * 
@@ -48,7 +49,7 @@ public:
 	FDataFlushManager(AActor * Owner, UWorld * World, UCameraComponent* CameraComponent);
 	~FDataFlushManager();
     
-    EJointVisibility VisibilityCheck(FVector location, float threshold, FVector jointLocation);
+    EJointVisibility VisibilityCheck(FVector location, float threshold);
 	void FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
 	void FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);
 	void OnChangedEnableProperty(bool IsEnable);
@@ -113,10 +114,10 @@ struct FCocoAnnotation
 GENERATED_BODY()
 private:
     static float CocoSkeletonThreshold(int index) {
-        float threshold[] = { 10.0f, 10.0f, 10.0f, 10.0f,
-            10.0f, 10.0f, 10.0f,
-            10.0f, 10.0f, 10.0f,
+        float threshold[] = { 10.0f, 10.0f, 10.0f,
             10.0f, 10.0f,
+            10.0f, 15.0f, 10.0f,
+            10.0f, 15.0f, 10.0f,
             10.0f, 10.0f, 10.0f,
             10.0f, 10.0f, 10.0f,
         };
@@ -200,7 +201,7 @@ public:
 
             this->keypoints.Add((int)screenCoord.X);
             this->keypoints.Add((int)screenCoord.Y);
-            this->keypoints.Add(this->ConvertToCocoVisibility(FlushManager->VisibilityCheck(location, CocoSkeletonThreshold(j), location)));
+            this->keypoints.Add(this->ConvertToCocoVisibility(FlushManager->VisibilityCheck(location, CocoSkeletonThreshold(j))));
         }
         this->area = 0;
         this->iscrowd = 0;

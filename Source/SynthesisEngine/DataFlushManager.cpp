@@ -13,21 +13,22 @@ FDataFlushManager::~FDataFlushManager()
 {
 }
 
-EJointVisibility FDataFlushManager::VisibilityCheck(FVector location, float threshold, FVector jointLocation)
+EJointVisibility FDataFlushManager::VisibilityCheck(FVector location, float threshold)
 {
 	FCollisionQueryParams collisionParam;
 	FHitResult result;
 	FVector start(cameraComponent->GetComponentLocation());
-
+    
 	if (world->LineTraceSingleByChannel(result, start, location, ECC_Visibility, collisionParam))
 	{
         FVector hitPoint = result.Location;
-        if((hitPoint-jointLocation).Size() < threshold)
+        
+        if((hitPoint-location).Size() < threshold)
         {
-            //UE_LOG(SynthesisEngine, Warning, TEXT("Visible"));
+//            UE_LOG(SynthesisEngine, Warning, TEXT("Visible"));
             return EJointVisibility::VISIBLE;
         }
-		//UE_LOG(SynthesisEngine, Warning, TEXT("Occluded"));
+//		UE_LOG(SynthesisEngine, Warning, TEXT("Occluded"));
         USkeletalMesh * temp = Cast<USkeletalMesh> (result.GetActor()->GetComponentByClass(USkeletalMesh::StaticClass()));
         if(temp != NULL)
         {
@@ -37,14 +38,13 @@ EJointVisibility FDataFlushManager::VisibilityCheck(FVector location, float thre
 	}
 	else
 	{
-		//UE_LOG(SynthesisEngine, Warning, TEXT("Visible"));
+//		UE_LOG(SynthesisEngine, Warning, TEXT("None hit, Visible"));
 		return EJointVisibility::VISIBLE;
 	}
 }
 
 void FDataFlushManager::FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
-
 	FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s_%d.png"), *path, *LevelName, *ActorLabel, dataID);
 	FString jsonPath = *FString::Printf(TEXT("%s/%s/%s_%d.json"), *path, *LevelName, *ActorLabel, dataID);
     
