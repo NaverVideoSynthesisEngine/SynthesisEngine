@@ -3,6 +3,7 @@
 #pragma once
 
 #include "SynthesisEngine.h"
+#include "Engine/PostProcessVolume.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Runtime/Core/Public/Templates/SharedPointer.h"
 #include "Runtime/JsonUtilities/Public/JsonObjectConverter.h"
@@ -45,12 +46,14 @@ private:
 	UWorld* world;
 	UCameraComponent* cameraComponent;
 	AActor * owner;
+    APostProcessVolume* postProcessVolume;
 public:
-	FDataFlushManager(AActor * Owner, UWorld * World, UCameraComponent* CameraComponent);
+	FDataFlushManager(AActor * Owner, UWorld * World, UCameraComponent* CameraComponent, APostProcessVolume* PostProcessVolume);
 	~FDataFlushManager();
     
     EJointVisibility VisibilityCheck(FVector location, float threshold);
 	void FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
+    void FlushToDataCocoFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
 	void FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);
 	void OnChangedEnableProperty(bool IsEnable);
 };

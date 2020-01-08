@@ -25,9 +25,7 @@ APhotoRoom::APhotoRoom()
 	CameraPerturber->SetupAttachment(SkeletalMesh);
 	MaterialPerturber->SetupAttachment(SkeletalMesh);
 	AnimationPerturber->SetupAttachment(SkeletalMesh);
-
-
-
+    
 	for (int i = 0; i < GarmentSocketNumber; i++)
 	{
 		FString ID = FString::Printf(TEXT("Garment%d"), i);
@@ -37,6 +35,7 @@ APhotoRoom::APhotoRoom()
 
 	LateDataFlushingCount = 0;
 	b_ShouldUpdate = true;
+    b_ShouldUpdate_COCO = 0;
 }
 
 void APhotoRoom::PostInitializeComponents()
@@ -86,13 +85,23 @@ void APhotoRoom::PostInitializeComponents()
 	{
 		this->ProcessDoneEvent.Broadcast();
 	});
+    
 }
 
 // Called when the game starts or when spawned
 void APhotoRoom::BeginPlay()
 {
 	Super::BeginPlay();
-	DataFlushManager = new FDataFlushManager(Cast<AActor>(this), GetWorld(), this->CameraComponent);
+    APostProcessVolume * volume;
+    for (TActorIterator<APostProcessVolume> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+    {
+        volume = Cast<APostProcessVolume>(*ActorItr);
+        if(volume != nullptr)
+        {
+            break;
+        }
+    }
+	DataFlushManager = new FDataFlushManager(Cast<AActor>(this), GetWorld(), this->CameraComponent, volume);
 }
 
 void APhotoRoom::BeginDestroy()
@@ -200,8 +209,61 @@ void APhotoRoom::UpdateWithLateDataFlushing()
 			LateDataFlushingCount++;
 		}
 	}
-	
-	
+}
+
+void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
+{
+    if (b_ShouldUpdate_COCO == 0)
+    {
+        if (EnableAnimationPerturber)
+            AnimationPerturber->Update();
+        if (EnableCameraPerturber && CameraPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+            CameraPerturber->Update();
+        if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+            MaterialPerturber->Update();
+        b_ShouldUpdate_COCO = 1;
+
+        if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
+        {
+            b_FirstUpdate = false;
+            CameraPerturber->Update();
+            MaterialPerturber->Update();
+        }
+    }
+    else if (b_ShouldUpdate_COCO == 1)
+    {
+        FString path;
+        FString platform = UGameplayStatics::GetPlatformName();
+        if(platform == TEXT("Mac"))
+        {
+            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+        }
+        else
+        {
+            path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
+        }
+        
+        if (EnableDataFlush)
+            DataFlushManager->FlushToDataCocoFormat(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+        b_ShouldUpdate_COCO = 2;
+    }
+    else
+    {
+        FString path;
+        FString platform = UGameplayStatics::GetPlatformName();
+        if(platform == TEXT("Mac"))
+        {
+            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+        }
+        else
+        {
+            path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
+        }
+        
+        if (EnableDataFlush)
+            DataFlushManager->FlushToDataCocoFormat_MASK(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+        b_ShouldUpdate_COCO = 0;
+    }
 }
 
 bool APhotoRoom::CheckIteration()

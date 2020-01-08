@@ -5,6 +5,8 @@
 #include "SynthesisEngine.h"
 #include "GameFramework/Pawn.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "EngineUtils.h"
+#include "Engine/PostProcessVolume.h"
 #include "MaterialPerturberComponent.h"
 #include "CameraPerturberComponent.h"
 #include "DataFlushManager.h"
@@ -28,6 +30,7 @@ class SYNTHESISENGINE_API APhotoRoom : public APawn
 private:
 	bool b_FirstUpdate = true;
 	bool b_ShouldUpdate;
+    int b_ShouldUpdate_COCO;
 	int LateDataFlushingCount;
 
 	int IterationIndex = 0;
@@ -95,7 +98,8 @@ public:
 
 	void Update();
 	void UpdateWithLateDataFlushing();
-
+    void UpdateWithLateDataFlushing_COCOTEMP();
+    
 	void Skip3DModel();
 	void Skip3DModelAnimation();
 	void SkipClothes();

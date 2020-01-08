@@ -3,8 +3,8 @@
 
 #include "DataFlushManager.h"
 
-FDataFlushManager::FDataFlushManager(AActor * Owner, UWorld* World, UCameraComponent* CameraComponent)
-	:world(World), cameraComponent(CameraComponent), owner(Owner)
+FDataFlushManager::FDataFlushManager(AActor * Owner, UWorld* World, UCameraComponent* CameraComponent, APostProcessVolume* PostProcessVolume)
+	:world(World), cameraComponent(CameraComponent), owner(Owner), postProcessVolume(PostProcessVolume)
 {
 	dataID = 0;
 }
@@ -72,7 +72,19 @@ void FDataFlushManager::FlushToDataCocoFormat(FString path, FString LevelName, F
 	FString jsonstr;
 	FJsonObjectConverter::UStructToJsonObjectString(coco, jsonstr);
 	FFileHelper::SaveStringToFile(*jsonstr, *jsonPath);
-	dataID++;
+    
+    postProcessVolume->bEnabled = true;
+}
+
+void FDataFlushManager::FlushToDataCocoFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
+{
+    FString fileName = FString::Printf(TEXT("%012d"),dataID);
+    FString maskPath = *FString::Printf(TEXT("%s/%s/%s_m.png"), *path, *LevelName, *fileName);
+    
+    FScreenshotRequest::RequestScreenshot(maskPath, false, false);
+    postProcessVolume->bEnabled = false;
+    
+    dataID++;
 }
 
 void FDataFlushManager::FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent)
