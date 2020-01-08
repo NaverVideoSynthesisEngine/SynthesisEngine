@@ -60,6 +60,11 @@ EJointVisibility FDataFlushManager::VisibilityCheck(FVector location, float thre
 	}
 }
 
+void FDataFlushManager::EnablePostProcessVolume(bool enable)
+{
+    postProcessVolume->bEnabled = enable;
+}
+
 void FDataFlushManager::FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
     FString fileName = FString::Printf(TEXT("%012d"),dataID);
@@ -72,17 +77,18 @@ void FDataFlushManager::FlushToDataCocoFormat(FString path, FString LevelName, F
 	FString jsonstr;
 	FJsonObjectConverter::UStructToJsonObjectString(coco, jsonstr);
 	FFileHelper::SaveStringToFile(*jsonstr, *jsonPath);
-    
-    postProcessVolume->bEnabled = true;
 }
 
 void FDataFlushManager::FlushToDataCocoFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
+    if(!postProcessVolume->bEnabled)
+    {
+        UE_LOG(SynthesisEngine, Warning, TEXT("PostProcessVolume is disabled. Please turn on before flushing mask"));
+    }
     FString fileName = FString::Printf(TEXT("%012d"),dataID);
     FString maskPath = *FString::Printf(TEXT("%s/%s/%s_m.png"), *path, *LevelName, *fileName);
     
     FScreenshotRequest::RequestScreenshot(maskPath, false, false);
-    postProcessVolume->bEnabled = false;
     
     dataID++;
 }

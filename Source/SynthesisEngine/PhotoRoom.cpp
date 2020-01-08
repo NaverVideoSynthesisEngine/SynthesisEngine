@@ -35,7 +35,7 @@ APhotoRoom::APhotoRoom()
 
 	LateDataFlushingCount = 0;
 	b_ShouldUpdate = true;
-    b_ShouldUpdate_COCO = 0;
+    UpdatePhase_COCO = ECocoUpdatePhase::UPDATE_PERTURBERS;
 }
 
 void APhotoRoom::PostInitializeComponents()
@@ -213,56 +213,68 @@ void APhotoRoom::UpdateWithLateDataFlushing()
 
 void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
 {
-    if (b_ShouldUpdate_COCO == 0)
+    FString path;
+    FString platform;
+    switch(UpdatePhase_COCO)
     {
-        if (EnableAnimationPerturber)
-            AnimationPerturber->Update();
-        if (EnableCameraPerturber && CameraPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
-            CameraPerturber->Update();
-        if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
-            MaterialPerturber->Update();
-        b_ShouldUpdate_COCO = 1;
+        case ECocoUpdatePhase::UPDATE_PERTURBERS:
+            if (EnableAnimationPerturber)
+                AnimationPerturber->Update();
+            if (EnableCameraPerturber && CameraPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+                CameraPerturber->Update();
+            if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+                MaterialPerturber->Update();
+            UpdatePhase_COCO = ECocoUpdatePhase::FLUSH_IMAGE_AND_KEYPOINTS;
 
-        if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
-        {
-            b_FirstUpdate = false;
-            CameraPerturber->Update();
-            MaterialPerturber->Update();
-        }
-    }
-    else if (b_ShouldUpdate_COCO == 1)
-    {
-        FString path;
-        FString platform = UGameplayStatics::GetPlatformName();
-        if(platform == TEXT("Mac"))
-        {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
-        }
-        else
-        {
-            path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
-        }
-        
-        if (EnableDataFlush)
-            DataFlushManager->FlushToDataCocoFormat(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
-        b_ShouldUpdate_COCO = 2;
-    }
-    else
-    {
-        FString path;
-        FString platform = UGameplayStatics::GetPlatformName();
-        if(platform == TEXT("Mac"))
-        {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
-        }
-        else
-        {
-            path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
-        }
-        
-        if (EnableDataFlush)
-            DataFlushManager->FlushToDataCocoFormat_MASK(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
-        b_ShouldUpdate_COCO = 0;
+            if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
+            {
+                b_FirstUpdate = false;
+                CameraPerturber->Update();
+                MaterialPerturber->Update();
+            }
+            break;
+            
+        case ECocoUpdatePhase::FLUSH_IMAGE_AND_KEYPOINTS:
+            platform = UGameplayStatics::GetPlatformName();
+            if(platform == TEXT("Mac"))
+            {
+                path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+            }
+            else
+            {
+                path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
+            }
+            
+            if (EnableDataFlush)
+                DataFlushManager->FlushToDataCocoFormat(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+            UpdatePhase_COCO = ECocoUpdatePhase::ENABLE_POSTPROCESSVOLUME;
+            break;
+            
+        case ECocoUpdatePhase::ENABLE_POSTPROCESSVOLUME:
+            DataFlushManager->EnablePostProcessVolume(true);
+            UpdatePhase_COCO = ECocoUpdatePhase::FLUSH_MASK;
+            break;
+            
+        case ECocoUpdatePhase::FLUSH_MASK:
+            platform = UGameplayStatics::GetPlatformName();
+            if(platform == TEXT("Mac"))
+            {
+                path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+            }
+            else
+            {
+                path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
+            }
+            
+            if (EnableDataFlush)
+                DataFlushManager->FlushToDataCocoFormat_MASK(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+            UpdatePhase_COCO = ECocoUpdatePhase::DISABLE_POSTPROCESSVOLUME;
+            break;
+            
+        case ECocoUpdatePhase::DISABLE_POSTPROCESSVOLUME:
+            DataFlushManager->EnablePostProcessVolume(false);
+            UpdatePhase_COCO = ECocoUpdatePhase::UPDATE_PERTURBERS;
+            break;
     }
 }
 

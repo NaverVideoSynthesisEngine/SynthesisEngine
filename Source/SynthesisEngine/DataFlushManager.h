@@ -52,6 +52,7 @@ public:
 	~FDataFlushManager();
     
     EJointVisibility VisibilityCheck(FVector location, float threshold);
+    void EnablePostProcessVolume(bool enable);
 	void FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
     void FlushToDataCocoFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
 	void FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);

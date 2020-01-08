@@ -22,6 +22,17 @@ enum class EUpdateProtocol : uint8
 	UPDATE_COMBINATION_ITERATION UMETA(DisaplyName = "Update when combination is being iterated")
 };
 
+UENUM(BlueprintType)
+enum class ECocoUpdatePhase : uint8
+{
+    /* Due to randome order of taking screenshot. We need to separate steps into five steps. */
+    UPDATE_PERTURBERS UMETA(DisplayName = "Update perturbers"),
+    FLUSH_IMAGE_AND_KEYPOINTS UMETA(DisplayName = "Flush image and keypoints data first"),
+    ENABLE_POSTPROCESSVOLUME UMETA(DisplayName = "Enable PostProcessVolume"),
+    FLUSH_MASK UMETA(DisplayName = "Flush mask image"),
+    DISABLE_POSTPROCESSVOLUME UMETA(DisplayName = "Disable PostProcessVolume"),
+};
+
 UCLASS()
 class SYNTHESISENGINE_API APhotoRoom : public APawn
 {
@@ -30,9 +41,10 @@ class SYNTHESISENGINE_API APhotoRoom : public APawn
 private:
 	bool b_FirstUpdate = true;
 	bool b_ShouldUpdate;
-    int b_ShouldUpdate_COCO;
 	int LateDataFlushingCount;
-
+    
+    ECocoUpdatePhase UpdatePhase_COCO;
+    
 	int IterationIndex = 0;
 public:
 	// Sets default values for this pawn's properties
