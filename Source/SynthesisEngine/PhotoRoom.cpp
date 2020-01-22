@@ -278,6 +278,51 @@ void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
     }
 }
 
+void APhotoRoom::UpdateWithLateDataFlushing_MPITEMP()
+{
+    if (b_ShouldUpdate)
+    {
+        if (EnableAnimationPerturber)
+            AnimationPerturber->Update();
+        if (EnableCameraPerturber && CameraPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+            CameraPerturber->Update();
+        if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+            MaterialPerturber->Update();
+        b_ShouldUpdate = false;
+
+        if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
+        {
+            b_FirstUpdate = false;
+            CameraPerturber->Update();
+            MaterialPerturber->Update();
+        }
+    }
+    else
+    {
+        FString path;
+        FString platform = UGameplayStatics::GetPlatformName();
+        if(platform == TEXT("Mac"))
+        {
+            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+        }
+        else
+        {
+            path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
+        }
+        if(LateDataFlushingCount == LATE_DATA_FLUSHING_Frame_to_Skip)
+        {
+            if (EnableDataFlush)
+                DataFlushManager->FlushToDataMPIFormat(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+            LateDataFlushingCount = 0;
+            b_ShouldUpdate = true;
+        }
+        else
+        {
+            LateDataFlushingCount++;
+        }
+    }
+}
+
 bool APhotoRoom::CheckIteration()
 {
 	IterationIndex++;

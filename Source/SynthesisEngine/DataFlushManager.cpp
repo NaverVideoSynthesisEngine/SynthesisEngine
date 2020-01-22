@@ -93,6 +93,21 @@ void FDataFlushManager::FlushToDataCocoFormat_MASK(FString path, FString LevelNa
     dataID++;
 }
 
+void FDataFlushManager::FlushToDataMPIFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent)
+{
+    FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s_%d.png"), *path, *LevelName, *ActorLabel, dataID);
+    FString jsonPath = *FString::Printf(TEXT("%s/%s/%s_%d.json"), *path, *LevelName, *ActorLabel, dataID);
+
+    FScreenshotRequest::RequestScreenshot(screenshotPath, false, false);
+    FMPIAnnotation annotation(this, world, CameraComponent, Mesh, dataID);
+
+    FString jsonstr;
+    FJsonObjectConverter::UStructToJsonObjectString(annotation, jsonstr);
+    FFileHelper::SaveStringToFile(*jsonstr, *jsonPath);
+    dataID++;
+    
+}
+
 void FDataFlushManager::FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent)
 {
 	FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s_%d.png"), *path, *LevelName, *ActorLabel, dataID);

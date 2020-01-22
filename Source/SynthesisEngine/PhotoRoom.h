@@ -111,6 +111,7 @@ public:
 	void Update();
 	void UpdateWithLateDataFlushing();
     void UpdateWithLateDataFlushing_COCOTEMP();
+    void UpdateWithLateDataFlushing_MPITEMP();
     
 	void Skip3DModel();
 	void Skip3DModelAnimation();

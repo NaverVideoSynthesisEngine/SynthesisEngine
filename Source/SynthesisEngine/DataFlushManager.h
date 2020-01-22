@@ -5,6 +5,7 @@
 #include "SynthesisEngine.h"
 #include "Engine/PostProcessVolume.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Templates/SharedPointer.h"
 #include "Runtime/JsonUtilities/Public/JsonObjectConverter.h"
 //#include "DrawDebugHelpers.h"
@@ -56,6 +57,7 @@ public:
 	void FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
     void FlushToDataCocoFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
 	void FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);
+    void FlushToDataMPIFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);
 	void OnChangedEnableProperty(bool IsEnable);
 };
 
@@ -113,6 +115,93 @@ public:
 };
 
 USTRUCT()
+struct FMPIAnnotation
+{
+GENERATED_BODY()
+    
+private :
+    static float MPISkeletonThreshold(int index) {
+           float threshold[] = { 10.0f, 10.0f, 10.0f,
+               10.0f, 10.0f,
+               10.0f, 15.0f, 10.0f,
+               10.0f, 15.0f, 10.0f,
+               10.0f, 10.0f, 10.0f,
+               10.0f, 10.0f, 10.0f,
+           };
+           return threshold[index];
+       }
+    static FString MPISkeleton(int index) {
+      FString skeleton[] = { TEXT("Nose"), TEXT("LeftEye"),TEXT("RightEye"),
+          TEXT("LeftEar"), TEXT("RightEar"),
+          TEXT("LeftArm"), TEXT("LeftForeArm"), TEXT("LeftHand"),
+          TEXT("RightArm"), TEXT("RightForeArm"), TEXT("RightHand"),
+          TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"),
+          TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"),
+         };
+         return skeleton[index];
+    }
+    /*
+     all_joint_names = {'spine3', 'spine4', 'spine2', 'spine', 'pelvis', ...     %5
+      'neck', 'head', 'head_top', 'left_clavicle', 'left_shoulder', 'left_elbow', ... %11
+     'left_wrist', 'left_hand',  'right_clavicle', 'right_shoulder', 'right_elbow', 'right_wrist', ... %17
+     'right_hand', 'left_hip', 'left_knee', 'left_ankle', 'left_foot', 'left_toe', ...        %23
+     'right_hip' , 'right_knee', 'right_ankle', 'right_foot', 'right_toe'};
+     */
+    static int MPISkeletonNum(){
+        return 17;
+    }
+public :
+    UPROPERTY(EditAnywhere)
+    TArray<float> camera_intrinsic;
+    UPROPERTY(EditAnywhere)
+    TArray<float> camera_extrinsic;
+    UPROPERTY(EditAnywhere)
+    TArray<float> annot2;
+    UPROPERTY(EditAnywhere)
+    TArray<float> annot3;
+    
+    FMPIAnnotation(){};
+    FMPIAnnotation(FDataFlushManager * FlushManager, UWorld * World, UCameraComponent * Camera, USkeletalMeshComponent* Mesh, int dataID)
+    {
+        for (int j = 0; j < MPISkeletonNum(); j++)
+        {
+            FVector location = Mesh->GetSocketLocation(FName(*MPISkeleton(j)));
+            FVector2D screenCoord;
+            UGameplayStatics::GetPlayerController(World, 0)->ProjectWorldLocationToScreen(location, screenCoord, true);
+         
+            this->annot3.Add(location.X);
+            this->annot3.Add(location.Y);
+            this->annot3.Add(location.Z);
+            
+            this->annot2.Add(screenCoord.X);
+            this->annot2.Add(screenCoord.Y);
+        }
+            
+        FTransform transform = Camera->GetComponentTransform();
+        FMatrix mat = transform.ToMatrixNoScale();
+        for(int i = 0 ; i < 4; i++)
+        {
+            for(int j = 0; j < 4; j++)
+            {
+                camera_extrinsic.Add(mat.M[i][j]);
+            }
+        }
+        
+        float HFOV = Camera->FieldOfView;
+        float VFOV = HFOV / Camera->AspectRatio;
+        const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+        
+        float FocalLength = ViewportSize.X /(2 * UKismetMathLibrary::Tan(HFOV * UKismetMathLibrary::GetPI() / 360));
+        float CU = ViewportSize.X/2;
+        float CV = ViewportSize.Y/2;
+        UE_LOG(SynthesisEngine, Warning, TEXT("Focal : %f"), FocalLength);
+        UE_LOG(SynthesisEngine, Warning, TEXT("CU : %f"), CU);
+        UE_LOG(SynthesisEngine, Warning, TEXT("CV : %f"), CV);
+//        camera_intrinsic.Add();
+    }
+};
+
+USTRUCT()
 struct FCocoAnnotation
 {
 GENERATED_BODY()
@@ -136,6 +225,7 @@ private:
           TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"),
       };
     /*
+     Left : coco joint names / Right : ue4 skeleton joint names
         "nose", Nose
         "left_eye", LeftEye
         "right_eye", RightEye
