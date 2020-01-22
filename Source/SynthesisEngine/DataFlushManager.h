@@ -121,22 +121,24 @@ GENERATED_BODY()
     
 private :
     static float MPISkeletonThreshold(int index) {
-           float threshold[] = { 10.0f, 10.0f, 10.0f,
-               10.0f, 10.0f,
-               10.0f, 15.0f, 10.0f,
-               10.0f, 15.0f, 10.0f,
+           float threshold[] = { 10.0f, 10.0f, 10.0f, 10.0f, 10.0f,
                10.0f, 10.0f, 10.0f,
-               10.0f, 10.0f, 10.0f,
+               10.0f, 15.0f, 10.0f, 10.0f, 10.0f,
+               10.0f, 15.0f, 10.0f, 10.0f, 10.0f,
+               10.0f, 10.0f, 10.0f, 10.0f, 10.0f,
+               10.0f, 10.0f, 10.0f, 10.0f, 10.0f,
            };
            return threshold[index];
        }
     static FString MPISkeleton(int index) {
-      FString skeleton[] = { TEXT("Nose"), TEXT("LeftEye"),TEXT("RightEye"),
-          TEXT("LeftEar"), TEXT("RightEar"),
-          TEXT("LeftArm"), TEXT("LeftForeArm"), TEXT("LeftHand"),
-          TEXT("RightArm"), TEXT("RightForeArm"), TEXT("RightHand"),
-          TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"),
-          TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"),
+      FString skeleton[] = {
+          TEXT("Spine1"), TEXT("Spine2"), TEXT("Spine"), TEXT("Spine"), TEXT("Hips"),
+          TEXT("Neck"), TEXT("Head"), TEXT("HeadTop_End"),
+          TEXT("LeftShoulder"), TEXT("LeftArm"), TEXT("LeftForeArm"), TEXT("LeftHand"), TEXT("LeftPalm"),
+          TEXT("RightShoulder"), TEXT("RightArm"), TEXT("RightForeArm"), TEXT("RightHand"), TEXT("RightPalm"),
+          
+          TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"), TEXT("LeftToeBase"), TEXT("LeftToe_End"),
+          TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"), TEXT("RightToeBase"), TEXT("RightToe_End")
          };
          return skeleton[index];
     }
@@ -148,7 +150,7 @@ private :
      'right_hip' , 'right_knee', 'right_ankle', 'right_foot', 'right_toe'};
      */
     static int MPISkeletonNum(){
-        return 17;
+        return 28;
     }
 public :
     UPROPERTY(EditAnywhere)
@@ -194,10 +196,29 @@ public :
         float FocalLength = ViewportSize.X /(2 * UKismetMathLibrary::Tan(HFOV * UKismetMathLibrary::GetPI() / 360));
         float CU = ViewportSize.X/2;
         float CV = ViewportSize.Y/2;
-        UE_LOG(SynthesisEngine, Warning, TEXT("Focal : %f"), FocalLength);
-        UE_LOG(SynthesisEngine, Warning, TEXT("CU : %f"), CU);
-        UE_LOG(SynthesisEngine, Warning, TEXT("CV : %f"), CV);
-//        camera_intrinsic.Add();
+//        UE_LOG(SynthesisEngine, Warning, TEXT("Focal : %f"), FocalLength);
+//        UE_LOG(SynthesisEngine, Warning, TEXT("CU : %f"), CU);
+//        UE_LOG(SynthesisEngine, Warning, TEXT("CV : %f"), CV);
+        
+        camera_intrinsic.Add(FocalLength);
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(CU);
+        camera_intrinsic.Add(0.0f);
+        
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(FocalLength);
+        camera_intrinsic.Add(CV);
+        camera_intrinsic.Add(0.0f);
+        
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(1.0f);
+        camera_intrinsic.Add(0.0f);
+        
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(1.0f);
     }
 };
 
