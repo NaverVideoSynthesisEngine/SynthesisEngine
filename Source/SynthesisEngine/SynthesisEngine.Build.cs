@@ -8,7 +8,7 @@ public class SynthesisEngine : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Json", "JsonUtilities", "UnrealEd" ,"LevelEditor" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Json", "JsonUtilities", "UnrealEd" ,"LevelEditor", "Foliage" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
