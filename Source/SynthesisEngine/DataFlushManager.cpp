@@ -3,8 +3,8 @@
 
 #include "DataFlushManager.h"
 
-FDataFlushManager::FDataFlushManager(AActor * Owner, UWorld* World, UCameraComponent* CameraComponent, APostProcessVolume* PostProcessVolume)
-	:world(World), cameraComponent(CameraComponent), owner(Owner), postProcessVolume(PostProcessVolume)
+FDataFlushManager::FDataFlushManager(AActor * Owner, UWorld* World, UCameraComponent* CameraComponent, APostProcessVolume* PostProcessVolume1, APostProcessVolume* PostProcessVolume2, AInstancedFoliageActor* FoliageActor)
+	:world(World), cameraComponent(CameraComponent), owner(Owner), postProcessVolume1(PostProcessVolume1), postProcessVolume2(PostProcessVolume2), foliageActor(FoliageActor)
 {
 	dataID = 0;
 }
@@ -60,9 +60,34 @@ EJointVisibility FDataFlushManager::VisibilityCheck(FVector location, float thre
 	}
 }
 
-void FDataFlushManager::EnablePostProcessVolume(bool enable)
+void FDataFlushManager::FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
-    postProcessVolume->bEnabled = enable;
+    FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s_%d.png"), *path, *LevelName, *ActorLabel, dataID);
+    FString jsonPath = *FString::Printf(TEXT("%s/%s/%s_%d.json"), *path, *LevelName, *ActorLabel, dataID);
+
+    FScreenshotRequest::RequestScreenshot(screenshotPath, false, false);
+    FDummyAnnotation annotation(this, world, Mesh, CameraComponent, dataID);
+
+    FString jsonstr;
+    FJsonObjectConverter::UStructToJsonObjectString(annotation, jsonstr);
+    FFileHelper::SaveStringToFile(*jsonstr, *jsonPath);
+    dataID++;
+}
+
+void FDataFlushManager::EnablePostProcessVolume1(bool enable)
+{
+    postProcessVolume1->bEnabled = enable;
+}
+void FDataFlushManager::EnablePostProcessVolume2(bool enable)
+{
+    if (postProcessVolume2 != nullptr) {
+        postProcessVolume2->bEnabled = enable;
+    }    
+}
+void FDataFlushManager::ChangeFoliageScale(FVector scale) {
+    if (postProcessVolume2 != nullptr) {
+        foliageActor->SetActorScale3D(scale);
+    }
 }
 
 void FDataFlushManager::FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
@@ -81,7 +106,7 @@ void FDataFlushManager::FlushToDataCocoFormat(FString path, FString LevelName, F
 
 void FDataFlushManager::FlushToDataCocoFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
-    if(!postProcessVolume->bEnabled)
+    if(!postProcessVolume1->bEnabled)
     {
         UE_LOG(SynthesisEngine, Warning, TEXT("PostProcessVolume is disabled. Please turn on before flushing mask"));
     }
@@ -108,18 +133,64 @@ void FDataFlushManager::FlushToDataMPIFormat(FString path, FString LevelName, FS
     
 }
 
-void FDataFlushManager::FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent)
+void FDataFlushManager::FlushToDataTotalFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
-	FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s_%d.png"), *path, *LevelName, *ActorLabel, dataID);
-	FString jsonPath = *FString::Printf(TEXT("%s/%s/%s_%d.json"), *path, *LevelName, *ActorLabel, dataID);
+    FString fileName = FString::Printf(TEXT("%012d"), dataID);
+    FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s.png"), *path, *LevelName, *fileName);
+    FString jsonPath = *FString::Printf(TEXT("%s/%s/%s.json"), *path, *LevelName, *fileName);
 
-	FScreenshotRequest::RequestScreenshot(screenshotPath, false, false);
-    FDummyAnnotation annotation(this, world, Mesh, CameraComponent, dataID);
+    FScreenshotRequest::RequestScreenshot(screenshotPath, false, false);
+    FTotalAnnotation annotation(this, world, CameraComponent, Mesh, dataID);
 
-	FString jsonstr;
-	FJsonObjectConverter::UStructToJsonObjectString(annotation, jsonstr);
-	FFileHelper::SaveStringToFile(*jsonstr, *jsonPath);
-	dataID++;
+    FString jsonstr;
+    FJsonObjectConverter::UStructToJsonObjectString(annotation, jsonstr);
+    FFileHelper::SaveStringToFile(*jsonstr, *jsonPath);
+}
+
+void FDataFlushManager::FlushToDataTotalFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
+{
+    if (!postProcessVolume1->bEnabled)
+    {
+        UE_LOG(SynthesisEngine, Warning, TEXT("PostProcessVolume1 is disabled. Please turn on before flushing mask"));
+    }
+    FString fileName = FString::Printf(TEXT("%012d"), dataID);
+    FString maskPath = *FString::Printf(TEXT("%s/%s/%s_m.png"), *path, *LevelName, *fileName);
+
+    FScreenshotRequest::RequestScreenshot(maskPath, false, false);
+    if (postProcessVolume2 == nullptr) {
+        dataID++;
+    }
+
+}
+
+void FDataFlushManager::FlushToDataTotalFormat_OCCLUSION1(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
+{
+    if (postProcessVolume2 != nullptr) {
+        if (!postProcessVolume2->bEnabled)
+        {
+            UE_LOG(SynthesisEngine, Warning, TEXT("PostProcessVolume2 is disabled. Please turn on before flushing mask"));
+        }
+        FString fileName = FString::Printf(TEXT("%012d"), dataID);
+        FString maskPath = *FString::Printf(TEXT("%s/%s/%s_o1.png"), *path, *LevelName, *fileName);
+
+        FScreenshotRequest::RequestScreenshot(maskPath, false, false);
+    }
+}
+
+void FDataFlushManager::FlushToDataTotalFormat_OCCLUSION2(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
+{
+    if (postProcessVolume2 != nullptr) {
+        if (!postProcessVolume2->bEnabled)
+        {
+            UE_LOG(SynthesisEngine, Warning, TEXT("PostProcessVolume2 is disabled. Please turn on before flushing mask"));
+        }
+        FString fileName = FString::Printf(TEXT("%012d"), dataID);
+        FString maskPath = *FString::Printf(TEXT("%s/%s/%s_o2.png"), *path, *LevelName, *fileName);
+
+        FScreenshotRequest::RequestScreenshot(maskPath, false, false);
+
+        dataID++;
+    }
 }
 
 void FDataFlushManager::OnChangedEnableProperty(bool IsEnable)

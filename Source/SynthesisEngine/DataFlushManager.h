@@ -3,13 +3,16 @@
 #pragma once
 
 #include "SynthesisEngine.h"
+#include "EngineUtils.h"
 #include "Engine/PostProcessVolume.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Runtime/Core/Public/Templates/SharedPointer.h"
 #include "Runtime/JsonUtilities/Public/JsonObjectConverter.h"
+#include "Runtime/Foliage/Public/InstancedFoliageActor.h"
 //#include "DrawDebugHelpers.h"
 #include "DataFlushManager.generated.h"
+
 /**
  * 
  */
@@ -47,17 +50,25 @@ private:
 	UWorld* world;
 	UCameraComponent* cameraComponent;
 	AActor * owner;
-    APostProcessVolume* postProcessVolume;
+    APostProcessVolume* postProcessVolume1;
+    APostProcessVolume* postProcessVolume2;
+    AInstancedFoliageActor* foliageActor;
 public:
-	FDataFlushManager(AActor * Owner, UWorld * World, UCameraComponent* CameraComponent, APostProcessVolume* PostProcessVolume);
+	FDataFlushManager(AActor * Owner, UWorld * World, UCameraComponent* CameraComponent, APostProcessVolume* PostProcessVolume1, APostProcessVolume* PostProcessVolume2, AInstancedFoliageActor* FoliageActor);
 	~FDataFlushManager();
     
     EJointVisibility VisibilityCheck(FVector location, float threshold);
-    void EnablePostProcessVolume(bool enable);
+    void EnablePostProcessVolume1(bool enable);
+    void EnablePostProcessVolume2(bool enable);
+    void ChangeFoliageScale(FVector scale);
 	void FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
     void FlushToDataCocoFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
 	void FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);
     void FlushToDataMPIFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);
+    void FlushToDataTotalFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
+    void FlushToDataTotalFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
+    void FlushToDataTotalFormat_OCCLUSION1(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
+    void FlushToDataTotalFormat_OCCLUSION2(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
 	void OnChangedEnableProperty(bool IsEnable);
 };
 
@@ -154,9 +165,9 @@ private :
     }
 public :
     UPROPERTY(EditAnywhere)
-    TArray<float> camera_intrinsic;
+        FVector TComp;
     UPROPERTY(EditAnywhere)
-    TArray<float> camera_extrinsic;
+        FRotator RComp;
     UPROPERTY(EditAnywhere)
     TArray<float> annot2;
     UPROPERTY(EditAnywhere)
@@ -179,46 +190,8 @@ public :
             this->annot2.Add(screenCoord.Y);
         }
             
-        FTransform transform = Camera->GetComponentTransform();
-        FMatrix mat = transform.ToMatrixNoScale();
-        for(int i = 0 ; i < 4; i++)
-        {
-            for(int j = 0; j < 4; j++)
-            {
-                camera_extrinsic.Add(mat.M[i][j]);
-            }
-        }
-        
-        float HFOV = Camera->FieldOfView;
-        float VFOV = HFOV / Camera->AspectRatio;
-        const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
-        
-        float FocalLength = ViewportSize.X /(2 * UKismetMathLibrary::Tan(HFOV * UKismetMathLibrary::GetPI() / 360));
-        float CU = ViewportSize.X/2;
-        float CV = ViewportSize.Y/2;
-//        UE_LOG(SynthesisEngine, Warning, TEXT("Focal : %f"), FocalLength);
-//        UE_LOG(SynthesisEngine, Warning, TEXT("CU : %f"), CU);
-//        UE_LOG(SynthesisEngine, Warning, TEXT("CV : %f"), CV);
-        
-        camera_intrinsic.Add(FocalLength);
-        camera_intrinsic.Add(0.0f);
-        camera_intrinsic.Add(CU);
-        camera_intrinsic.Add(0.0f);
-        
-        camera_intrinsic.Add(0.0f);
-        camera_intrinsic.Add(FocalLength);
-        camera_intrinsic.Add(CV);
-        camera_intrinsic.Add(0.0f);
-        
-        camera_intrinsic.Add(0.0f);
-        camera_intrinsic.Add(0.0f);
-        camera_intrinsic.Add(1.0f);
-        camera_intrinsic.Add(0.0f);
-        
-        camera_intrinsic.Add(0.0f);
-        camera_intrinsic.Add(0.0f);
-        camera_intrinsic.Add(0.0f);
-        camera_intrinsic.Add(1.0f);
+        this->TComp = Camera->GetComponentLocation();
+        this->RComp = Camera->GetComponentRotation();
     }
 };
 
@@ -309,5 +282,140 @@ public:
             this->keypoints.Add(this->ConvertToCocoVisibility(FlushManager->VisibilityCheck(location, CocoSkeletonThreshold(j))));
         }
         this->num_keypoints = CocoSkeletonNum();
+    }
+};
+
+USTRUCT()
+struct FTotalAnnotation
+{
+GENERATED_BODY()
+private:
+    static FString MPISkeleton(int index) {
+        FString skeleton[] = {
+            TEXT("Spine1"), TEXT("Spine2"), TEXT("Spine"), TEXT("Spine"), TEXT("Hips"),
+            TEXT("Neck"), TEXT("Head"), TEXT("HeadTop_End"),
+            TEXT("LeftShoulder"), TEXT("LeftArm"), TEXT("LeftForeArm"), TEXT("LeftHand"), TEXT("LeftPalm"),
+            TEXT("RightShoulder"), TEXT("RightArm"), TEXT("RightForeArm"), TEXT("RightHand"), TEXT("RightPalm"),
+
+            TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"), TEXT("LeftToeBase"), TEXT("LeftToe_End"),
+            TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"), TEXT("RightToeBase"), TEXT("RightToe_End")
+        };
+        return skeleton[index];
+    }
+    static int MPISkeletonNum() {
+        return 28;
+    }
+    static float CocoSkeletonThreshold(int index) {
+        float threshold[] = { 10.0f, 10.0f, 10.0f,
+            10.0f, 10.0f,
+            10.0f, 15.0f, 10.0f,
+            10.0f, 15.0f, 10.0f,
+            10.0f, 10.0f, 10.0f,
+            10.0f, 10.0f, 10.0f,
+        };
+        return threshold[index];
+    }
+    static FString CocoSkeleton(int index) {
+        FString skeleton[] = { TEXT("Nose"), TEXT("LeftEye"),TEXT("RightEye"),
+            TEXT("LeftEar"), TEXT("RightEar"),
+            TEXT("LeftArm"), TEXT("LeftForeArm"), TEXT("LeftHand"),
+            TEXT("RightArm"), TEXT("RightForeArm"), TEXT("RightHand"),
+            TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"),
+            TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"),
+        };
+        return skeleton[index];
+    }
+    static int CocoSkeletonNum() {
+        return 17;
+    }
+    static int ConvertToCocoVisibility(EJointVisibility visibility)
+    {
+        switch (visibility)
+        {
+        case EJointVisibility::VISIBLE:
+            return 2;
+        case EJointVisibility::OCCLUDED_BY_HUMAN:
+        case EJointVisibility::OCCLUDED_BY_OBJECT:
+            return 1;
+        case EJointVisibility::OUT_OF_SIGHT:
+            return 0;
+        }
+        UE_LOG(SynthesisEngine, Warning, TEXT("FlushToData :: Error on Coco Format"));
+        return -1;
+    }
+public:
+    UPROPERTY(EditAnywhere)
+        FVector TComp;
+    UPROPERTY(EditAnywhere)
+        FRotator RComp;
+    UPROPERTY(EditAnywhere)
+        TArray<float> camera_intrinsic;
+    UPROPERTY(EditAnywhere)
+        TArray<float> annot2;
+    UPROPERTY(EditAnywhere)
+        TArray<float> annot3;
+    UPROPERTY(EditAnywhere)
+        int num_keypoints;
+    UPROPERTY(EditAnywhere)
+        TArray<int> keypoints;
+
+    FTotalAnnotation() {};
+    FTotalAnnotation(FDataFlushManager* FlushManager, UWorld* World, UCameraComponent* Camera, USkeletalMeshComponent* Mesh, int dataID)
+    {
+        for (int j = 0; j < MPISkeletonNum(); j++)
+        {
+            FVector location = Mesh->GetSocketLocation(FName(*MPISkeleton(j)));
+            FVector2D screenCoord;
+            UGameplayStatics::GetPlayerController(World, 0)->ProjectWorldLocationToScreen(location, screenCoord, true);
+
+            this->annot3.Add(location.X);
+            this->annot3.Add(location.Y);
+            this->annot3.Add(location.Z);
+
+            this->annot2.Add(screenCoord.X);
+            this->annot2.Add(screenCoord.Y);
+        }
+
+        this->TComp = Camera->GetComponentLocation();
+        this->RComp = Camera->GetComponentRotation();
+
+        for (int j = 0; j < CocoSkeletonNum(); j++)
+        {
+            FVector location = Mesh->GetSocketLocation(FName(*CocoSkeleton(j)));
+            FVector2D screenCoord;
+            UGameplayStatics::GetPlayerController(World, 0)->ProjectWorldLocationToScreen(location, screenCoord, true);
+
+            this->keypoints.Add((int)screenCoord.X);
+            this->keypoints.Add((int)screenCoord.Y);
+            this->keypoints.Add(this->ConvertToCocoVisibility(FlushManager->VisibilityCheck(location, CocoSkeletonThreshold(j))));
+        }
+        this->num_keypoints = CocoSkeletonNum();
+        float HFOV = Camera->FieldOfView;
+        float VFOV = HFOV / Camera->AspectRatio;
+        const FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+
+        float FocalLength = ViewportSize.X / (2 * UKismetMathLibrary::Tan(HFOV * UKismetMathLibrary::GetPI() / 360));
+        float CU = ViewportSize.X / 2;
+        float CV = ViewportSize.Y / 2;
+
+        camera_intrinsic.Add(FocalLength);
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(CU);
+        camera_intrinsic.Add(0.0f);
+
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(FocalLength);
+        camera_intrinsic.Add(CV);
+        camera_intrinsic.Add(0.0f);
+
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(1.0f);
+        camera_intrinsic.Add(0.0f);
+
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(0.0f);
+        camera_intrinsic.Add(1.0f);
     }
 };

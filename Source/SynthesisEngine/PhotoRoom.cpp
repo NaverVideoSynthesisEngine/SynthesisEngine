@@ -92,16 +92,35 @@ void APhotoRoom::PostInitializeComponents()
 void APhotoRoom::BeginPlay()
 {
 	Super::BeginPlay();
-    APostProcessVolume * volume;
+    APostProcessVolume * volume1 = nullptr;
+    APostProcessVolume * volume2 = nullptr;
+    AInstancedFoliageActor* foliageActor = nullptr;
+
     for (TActorIterator<APostProcessVolume> ActorItr(GetWorld()); ActorItr; ++ActorItr)
     {
-        volume = Cast<APostProcessVolume>(*ActorItr);
-        if(volume != nullptr)
-        {
+        volume1 = Cast<APostProcessVolume>(*ActorItr);
+        if (volume1->GetActorLabel() == "PostProcessVolume1") {
             break;
         }
     }
-	DataFlushManager = new FDataFlushManager(Cast<AActor>(this), GetWorld(), this->CameraComponent, volume);
+    for (TActorIterator<APostProcessVolume> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+    {
+        volume2 = Cast<APostProcessVolume>(*ActorItr);
+        if (volume2->GetActorLabel() == "PostProcessVolume2") {
+            break;
+        }
+        else {
+            volume2 = nullptr;
+        }
+    }
+    for (TActorIterator<AInstancedFoliageActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
+    {
+        foliageActor = Cast<AInstancedFoliageActor>(*ActorItr);
+        if (foliageActor != nullptr) {
+            break;
+        }
+    }
+	DataFlushManager = new FDataFlushManager(Cast<AActor>(this), GetWorld(), this->CameraComponent, volume1, volume2, foliageActor);
 }
 
 void APhotoRoom::BeginDestroy()
@@ -156,7 +175,7 @@ void APhotoRoom::Update()
 	if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
 		MaterialPerturber->Update();
 	if (EnableDataFlush) 
-		DataFlushManager->FlushToData(TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs"), *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+		DataFlushManager->FlushToData(TEXT("D:/workspace/SynthesisEngine/ProtoOutputs"), *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
 	
 	if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
 	{
@@ -195,7 +214,7 @@ void APhotoRoom::UpdateWithLateDataFlushing()
         }
         else
         {
-            path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
+            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
         }
 		if(LateDataFlushingCount == LATE_DATA_FLUSHING_Frame_to_Skip)
 		{
@@ -242,7 +261,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
             }
             else
             {
-                path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
+                path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
             }
             
             if (EnableDataFlush)
@@ -251,7 +270,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
             break;
             
         case ECocoUpdatePhase::ENABLE_POSTPROCESSVOLUME:
-            DataFlushManager->EnablePostProcessVolume(true);
+            DataFlushManager->EnablePostProcessVolume1(true);
             UpdatePhase_COCO = ECocoUpdatePhase::FLUSH_MASK;
             break;
             
@@ -263,7 +282,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
             }
             else
             {
-                path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
+                path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
             }
             
             if (EnableDataFlush)
@@ -272,7 +291,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
             break;
             
         case ECocoUpdatePhase::DISABLE_POSTPROCESSVOLUME:
-            DataFlushManager->EnablePostProcessVolume(false);
+            DataFlushManager->EnablePostProcessVolume1(false);
             UpdatePhase_COCO = ECocoUpdatePhase::UPDATE_PERTURBERS;
             break;
     }
@@ -307,7 +326,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_MPITEMP()
         }
         else
         {
-            path = TEXT("D:/ChangHun/sourcetree/SynthesisEngine/ProtoOutputs");
+            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
         }
         if(LateDataFlushingCount == LATE_DATA_FLUSHING_Frame_to_Skip)
         {
@@ -321,6 +340,131 @@ void APhotoRoom::UpdateWithLateDataFlushing_MPITEMP()
             LateDataFlushingCount++;
         }
     }
+}
+
+void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
+{
+    FString path;
+    FString platform;
+    switch (UpdatePhase_TOTAL)
+    {
+    case ETotalUpdatePhase::UPDATE_PERTURBERS:
+        if (EnableAnimationPerturber)
+            AnimationPerturber->Update();
+        if (EnableCameraPerturber && CameraPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+            CameraPerturber->Update();
+        if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
+            MaterialPerturber->Update();
+        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_IMAGE_AND_KEYPOINTS;
+
+        if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
+        {
+            b_FirstUpdate = false;
+            CameraPerturber->Update();
+            MaterialPerturber->Update();
+        }
+        break;
+
+    case ETotalUpdatePhase::FLUSH_IMAGE_AND_KEYPOINTS:
+        platform = UGameplayStatics::GetPlatformName();
+        if (platform == TEXT("Mac"))
+        {
+            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+        }
+        else
+        {
+            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+        }
+
+        if (EnableDataFlush)
+            DataFlushManager->FlushToDataTotalFormat(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+        UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_STENCIL;
+        break;
+
+    case ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_STENCIL:
+        DataFlushManager->EnablePostProcessVolume1(true);
+        DataFlushManager->EnablePostProcessVolume2(false);
+        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK_STENCIL;
+        break;
+
+    case ETotalUpdatePhase::FLUSH_MASK_STENCIL:
+        platform = UGameplayStatics::GetPlatformName();
+        if (platform == TEXT("Mac"))
+        {
+            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+        }
+        else
+        {
+            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+        }
+
+        if (EnableDataFlush)
+            DataFlushManager->FlushToDataTotalFormat_MASK(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+        UpdatePhase_TOTAL = ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_STENCIL;
+        break;
+
+    case ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_STENCIL:
+        DataFlushManager->EnablePostProcessVolume1(false);
+        UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_OCCLUSION;
+        break;
+
+    case ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_OCCLUSION:
+        DataFlushManager->EnablePostProcessVolume2(true);
+        UpdatePhase_TOTAL = ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE1;
+        break;
+
+    case ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE1:
+        DataFlushManager->ChangeFoliageScale(FVector(0.f, 0.f, 0.f));
+        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK_OCCLUSION1;
+        break;
+
+    case ETotalUpdatePhase::FLUSH_MASK_OCCLUSION1:
+        platform = UGameplayStatics::GetPlatformName();
+        if (platform == TEXT("Mac"))
+        {
+            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+        }
+        else
+        {
+            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+        }
+
+        if (EnableDataFlush) {
+            DataFlushManager->ChangeFoliageScale(FVector(0.f, 0.f, 0.f));
+            DataFlushManager->FlushToDataTotalFormat_OCCLUSION1(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+        }
+        UpdatePhase_TOTAL = ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE2;
+        break;
+
+    case ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE2:
+        DataFlushManager->ChangeFoliageScale(FVector(1.f, 1.f, 1.f));
+        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK_OCCLUSION2;
+        break;
+
+    case ETotalUpdatePhase::FLUSH_MASK_OCCLUSION2:
+        platform = UGameplayStatics::GetPlatformName();
+        if (platform == TEXT("Mac"))
+        {
+            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+        }
+        else
+        {
+            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+        }
+
+        if (EnableDataFlush) {
+            DataFlushManager->FlushToDataTotalFormat_OCCLUSION2(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+        }
+        UpdatePhase_TOTAL = ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_OCCLUSION;
+        break;
+
+    case ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_OCCLUSION:
+        DataFlushManager->EnablePostProcessVolume1(false);
+        DataFlushManager->EnablePostProcessVolume2(false);
+        UpdatePhase_TOTAL = ETotalUpdatePhase::UPDATE_PERTURBERS;
+        break;
+    }
+
 }
 
 bool APhotoRoom::CheckIteration()
