@@ -15,6 +15,7 @@ USynthesisEngineInstance::USynthesisEngineInstance(const FObjectInitializer& Obj
 	b_UpdateAuto = false;
 
 	LevelsToLoad.Add(TEXT("EnvironmentSet_Toy"));
+	LevelsToLoad.Add(TEXT("Modern_Apartment_Toy"));
 	LevelsToLoad.Add(TEXT("Demo_Toy"));
 }
 
