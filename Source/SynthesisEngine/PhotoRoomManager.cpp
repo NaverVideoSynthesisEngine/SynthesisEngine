@@ -97,7 +97,8 @@ void APhotoRoomManager::Update()
 //		PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing();
 //      PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_COCOTEMP();
 //      PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_MPITEMP();
-        PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_TOTAL();
+//      PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_TOTAL();
+        PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA();
 	}
     else
     {

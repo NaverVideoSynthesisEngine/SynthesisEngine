@@ -19,7 +19,8 @@ enum class EUpdateProtocol : uint8
 	UPDATE_EVERY_FRAME UMETA(DisplayName = "Update Every Frame"),
 	UPDATE_CLOTH_IS_CHANGED UMETA(DisaplyName = "Update if cloth is changed"),
 	UPDATE_COMBINATION_IS_CHANGED UMETA(DisaplyName = "Update if combination is changed"),
-	UPDATE_COMBINATION_ITERATION UMETA(DisaplyName = "Update when combination is being iterated")
+	UPDATE_COMBINATION_ITERATION UMETA(DisaplyName = "Update when combination is being iterated"),
+    NONE UMETA(DisplayName = "Default")
 };
 
 UENUM(BlueprintType)
@@ -62,7 +63,10 @@ private:
     ECocoUpdatePhase UpdatePhase_COCO;
 	ETotalUpdatePhase UpdatePhase_TOTAL;
     
+    int FixedCameraIndex = 0;
 	int IterationIndex = 0;
+    
+    TArray<USceneComponent*> CameraPoints;
 public:
 	// Sets default values for this pawn's properties
 	APhotoRoom();
@@ -78,7 +82,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Option)
 	bool PerturbCameraAndMaterialOnStart = true;
-
+    
 	UPROPERTY(EditAnywhere, Category = Option)
 	int IterationCount = 1;
 
@@ -130,6 +134,8 @@ public:
     void UpdateWithLateDataFlushing_COCOTEMP();
     void UpdateWithLateDataFlushing_MPITEMP();
 	void UpdateWithLateDataFlushing_TOTAL();
+    
+    void UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA();
     
 	void Skip3DModel();
 	void Skip3DModelAnimation();
