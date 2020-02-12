@@ -15,7 +15,10 @@ class SYNTHESISENGINE_API AFoliageConverter : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+public:
+    
+    UPROPERTY(EditAnywhere, Category = Option)
+    int CustomStencilValueToApply = 4;
 	// Sets default values for this actor's properties
 	AFoliageConverter();
 

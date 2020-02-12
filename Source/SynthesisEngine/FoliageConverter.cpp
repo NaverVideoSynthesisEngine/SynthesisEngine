@@ -39,7 +39,8 @@ void AFoliageConverter::BeginPlay()
                         AStaticMeshActor * actor = GetWorld()->SpawnActor<AStaticMeshActor>(AStaticMeshActor::StaticClass(), transform, params);
                         UStaticMeshComponent * comp = actor->GetStaticMeshComponent();
                         comp->SetStaticMesh(Mesh);
-                        
+                        comp->bRenderCustomDepth = true;
+                        comp->CustomDepthStencilValue = CustomStencilValueToApply;
                         InstancedComp->RemoveInstance(i);
                     }
 //                    UE_LOG(SynthesisEngine, Error, TEXT("Static Mesh : %s"), *Mesh->GetName());
