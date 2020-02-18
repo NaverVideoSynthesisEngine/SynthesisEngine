@@ -20,8 +20,8 @@ private:
 
 	USkeletalMesh* CurrentSkeletalMesh;
 	UAnimationAsset* CurrentAnimationAsset;
-	USkeletalMesh* CurrentClothesMesh;
-	UAnimationAsset* CurrentClothesAnimationAsset;
+	USkeletalMesh* CurrentClothesMesh; /* Obsolete, For multiple garments, this is not being used. */
+	UAnimationAsset* CurrentClothesAnimationAsset; /* Obsolete, For multiple garments, this is not being used. */
 
 	bool Check3DModel(FProgress* CurrentProgress);
 	void Check3DModelAnimation(FProgress* CurrentProgress);
@@ -56,7 +56,7 @@ public:
 	UAnimationPerturberComponent();
 
 	UPROPERTY()
-	USkeletalMeshComponent* GarmentMesh;
+	USkeletalMeshComponent* GarmentMesh; /* Obsolete, For multiple garments, this is not being used. */
 	UPROPERTY()
 	USkeletalMeshComponent* SkeletalMesh;
 
