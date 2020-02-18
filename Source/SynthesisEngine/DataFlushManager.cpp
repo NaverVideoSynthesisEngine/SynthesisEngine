@@ -122,18 +122,24 @@ void FDataFlushManager::FlushToDataMPIFormat(FString path, FString LevelName, FS
     
 }
 
-void FDataFlushManager::FlushToDataTotalFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
+void FDataFlushManager::FlushToDataTotalFormat_ANNOT(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
     FString fileName = FString::Printf(TEXT("%012d"), dataID);
-    FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s/image/%s.png"), *path, *LevelName, *ActorLabel, *fileName);
     FString jsonPath = *FString::Printf(TEXT("%s/%s/%s/json/%s.json"), *path, *LevelName, *ActorLabel , *fileName);
 
-    FScreenshotRequest::RequestScreenshot(screenshotPath, false, false);
     FTotalAnnotation annotation(this, world, CameraComponent, Mesh, dataID);
 
     FString jsonstr;
     FJsonObjectConverter::UStructToJsonObjectString(annotation, jsonstr);
     FFileHelper::SaveStringToFile(*jsonstr, *jsonPath);
+}
+
+void FDataFlushManager::FlushToDataTotalFormat_IMAGE(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
+{
+    FString fileName = FString::Printf(TEXT("%012d"), dataID);
+    FString screenshotPath = *FString::Printf(TEXT("%s/%s/%s/image/%s.png"), *path, *LevelName, *ActorLabel, *fileName);
+
+    FScreenshotRequest::RequestScreenshot(screenshotPath, false, false);
 }
 
 void FDataFlushManager::FlushToDataTotalFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)

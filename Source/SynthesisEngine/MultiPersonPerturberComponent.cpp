@@ -41,6 +41,9 @@ void UMultiPersonPerturberComponent::Init(class APhotoRoom* Owner)
 {
     this->Owner = Owner;
     this->NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
+    
+    SkeletalMesh->bRenderCustomDepth = true;
+    SkeletalMesh->CustomDepthStencilValue = Owner->SkeletalMesh->CustomDepthStencilValue;
 }
 
 void UMultiPersonPerturberComponent::Update()

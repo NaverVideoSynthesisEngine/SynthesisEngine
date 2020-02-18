@@ -71,6 +71,8 @@ public:
 	bool EnableAnimationPerturber = true;
 	UPROPERTY(EditAnywhere, Category = Debug)
 	bool EnableMaterialPerturber = true;
+    UPROPERTY(EditAnywhere, Category = Debug)
+    bool EnableMultiPersonPerturber = true;
 	UPROPERTY(EditAnywhere, Category = Debug)
 	bool EnableDataFlush = true;
 

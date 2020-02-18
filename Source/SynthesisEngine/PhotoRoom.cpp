@@ -46,9 +46,10 @@ APhotoRoom::APhotoRoom()
         UMultiPersonPerturberComponent* TempPerson = CreateDefaultSubobject<UMultiPersonPerturberComponent>(*ID);
         TempPerson->SetupAttachment(SkeletalMesh);
         FString CharacterName = FString::Printf(TEXT("Character_%d"), i);
-
+        
         TempPerson->SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(*CharacterName);
         TempPerson->SkeletalMesh->SetupAttachment(TempPerson);
+        
         for (int j = 0; j < GarmentSocketNumber; j++)
         {
             FString GarmentName = FString::Printf(TEXT("Garment_%d_%d"), i,j);
@@ -365,10 +366,14 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
         if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
             MaterialPerturber->Update();
             
-        for(UMultiPersonPerturberComponent * multi : MultiPeople)
+        if (EnableMultiPersonPerturber)
         {
-            multi->Update();
+            for(UMultiPersonPerturberComponent * multi : MultiPeople)
+            {
+                multi->Update();
+            }
         }
+            
         UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_IMAGE_AND_KEYPOINTS;
             
         if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
@@ -392,12 +397,17 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
 
         if (EnableDataFlush)
         {
-            DataFlushManager->FlushToDataTotalFormat(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
-            for(int i = 0 ; i < MultiPersonSocketNumber; i++)
+            DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+            if(EnableMultiPersonPerturber)
             {
+                for(int i = 0 ; i < MultiPersonSocketNumber; i++)
+                {
+                    
+                    DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), MultiPeople[i]->GetName(), MultiPeople[i]->SkeletalMesh, this->CameraComponent);
+                }
                 
-                DataFlushManager->FlushToDataTotalFormat(path, *GetWorld()->GetName(), MultiPeople[i]->GetName(), MultiPeople[i]->SkeletalMesh, this->CameraComponent);
             }
+            DataFlushManager->FlushToDataTotalFormat_IMAGE(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
         }
         UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME;
         break;
@@ -482,7 +492,10 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
         }
 
         if (EnableDataFlush)
-            DataFlushManager->FlushToDataTotalFormat(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+        {
+            DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+            DataFlushManager->FlushToDataTotalFormat_IMAGE(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+        }
         UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME;
         break;
 
