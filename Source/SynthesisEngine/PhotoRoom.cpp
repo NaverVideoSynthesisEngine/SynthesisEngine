@@ -114,42 +114,22 @@ void APhotoRoom::PostInitializeComponents()
 		this->ProcessDoneEvent.Broadcast();
 	});
     
-    CameraPerturber->GetChildrenComponents(false, CameraPoints);
 }
 
 // Called when the game starts or when spawned
 void APhotoRoom::BeginPlay()
 {
 	Super::BeginPlay();
-    APostProcessVolume * volume1 = nullptr;
-    APostProcessVolume * volume2 = nullptr;
-    AInstancedFoliageActor* foliageActor = nullptr;
+    APostProcessVolume * volume = nullptr;
 
     for (TActorIterator<APostProcessVolume> ActorItr(GetWorld()); ActorItr; ++ActorItr)
     {
-        volume1 = Cast<APostProcessVolume>(*ActorItr);
-        if (volume1->GetActorLabel() == "PostProcessVolume1") {
+        volume = Cast<APostProcessVolume>(*ActorItr);
+        if (volume->GetActorLabel() == "PostProcessVolume") {
             break;
         }
     }
-    for (TActorIterator<APostProcessVolume> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-    {
-        volume2 = Cast<APostProcessVolume>(*ActorItr);
-        if (volume2->GetActorLabel() == "PostProcessVolume2") {
-            break;
-        }
-        else {
-            volume2 = nullptr;
-        }
-    }
-    for (TActorIterator<AInstancedFoliageActor> ActorItr(GetWorld()); ActorItr; ++ActorItr)
-    {
-        foliageActor = Cast<AInstancedFoliageActor>(*ActorItr);
-        if (foliageActor != nullptr) {
-            break;
-        }
-    }
-	DataFlushManager = new FDataFlushManager(Cast<AActor>(this), GetWorld(), this->CameraComponent, volume1, volume2, foliageActor);
+	DataFlushManager = new FDataFlushManager(Cast<AActor>(this), GetWorld(), this->CameraComponent, volume);
 }
 
 void APhotoRoom::BeginDestroy()
@@ -299,7 +279,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
             break;
             
         case ECocoUpdatePhase::ENABLE_POSTPROCESSVOLUME:
-            DataFlushManager->EnablePostProcessVolume1(true);
+            DataFlushManager->EnablePostProcessVolume(true);
             UpdatePhase_COCO = ECocoUpdatePhase::FLUSH_MASK;
             break;
             
@@ -320,7 +300,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
             break;
             
         case ECocoUpdatePhase::DISABLE_POSTPROCESSVOLUME:
-            DataFlushManager->EnablePostProcessVolume1(false);
+            DataFlushManager->EnablePostProcessVolume(false);
             UpdatePhase_COCO = ECocoUpdatePhase::UPDATE_PERTURBERS;
             break;
     }
@@ -419,16 +399,15 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
                 DataFlushManager->FlushToDataTotalFormat(path, *GetWorld()->GetName(), MultiPeople[i]->GetName(), MultiPeople[i]->SkeletalMesh, this->CameraComponent);
             }
         }
-        UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_STENCIL;
+        UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME;
         break;
 
-    case ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_STENCIL:
-        DataFlushManager->EnablePostProcessVolume1(true);
-        DataFlushManager->EnablePostProcessVolume2(false);
-        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK_STENCIL;
+    case ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME:
+        DataFlushManager->EnablePostProcessVolume(true);
+        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK;
         break;
 
-    case ETotalUpdatePhase::FLUSH_MASK_STENCIL:
+    case ETotalUpdatePhase::FLUSH_MASK:
         platform = UGameplayStatics::GetPlatformName();
         if (platform == TEXT("Mac"))
         {
@@ -441,67 +420,11 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
 
         if (EnableDataFlush)
             DataFlushManager->FlushToDataTotalFormat_MASK(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
-        UpdatePhase_TOTAL = ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_STENCIL;
+        UpdatePhase_TOTAL = ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME;
         break;
 
-    case ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_STENCIL:
-        DataFlushManager->EnablePostProcessVolume1(false);
-        UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_OCCLUSION;
-        break;
-
-    case ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_OCCLUSION:
-        DataFlushManager->EnablePostProcessVolume2(true);
-        UpdatePhase_TOTAL = ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE1;
-        break;
-
-    case ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE1:
-        DataFlushManager->ChangeFoliageScale(FVector(0.f, 0.f, 0.f));
-        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK_OCCLUSION1;
-        break;
-
-    case ETotalUpdatePhase::FLUSH_MASK_OCCLUSION1:
-        platform = UGameplayStatics::GetPlatformName();
-        if (platform == TEXT("Mac"))
-        {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
-        }
-        else
-        {
-            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
-        }
-
-        if (EnableDataFlush) {
-            DataFlushManager->ChangeFoliageScale(FVector(0.f, 0.f, 0.f));
-            DataFlushManager->FlushToDataTotalFormat_OCCLUSION1(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
-        }
-        UpdatePhase_TOTAL = ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE2;
-        break;
-
-    case ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE2:
-        DataFlushManager->ChangeFoliageScale(FVector(1.f, 1.f, 1.f));
-        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK_OCCLUSION2;
-        break;
-
-    case ETotalUpdatePhase::FLUSH_MASK_OCCLUSION2:
-        platform = UGameplayStatics::GetPlatformName();
-        if (platform == TEXT("Mac"))
-        {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
-        }
-        else
-        {
-            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
-        }
-
-        if (EnableDataFlush) {
-            DataFlushManager->FlushToDataTotalFormat_OCCLUSION2(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
-        }
-        UpdatePhase_TOTAL = ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_OCCLUSION;
-        break;
-
-    case ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_OCCLUSION:
-        DataFlushManager->EnablePostProcessVolume1(false);
-        DataFlushManager->EnablePostProcessVolume2(false);
+    case ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME:
+        DataFlushManager->EnablePostProcessVolume(false);
         UpdatePhase_TOTAL = ETotalUpdatePhase::UPDATE_PERTURBERS;
         break;
     }
@@ -511,10 +434,8 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
 void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
 {
     /*
-    Update Protocol을 딱히 건드리지 않아도 될 거 같다. (이 함수에서)
-    대신 Camera -> None // Material -> 아무거나
-     
-    처음에 animation perturb 해야함
+    It is okay not to remove all Update Protocol
+    Just make sure that Update Protocol of camera perturber -> None
     */
     FString path;
     FString platform;
@@ -526,7 +447,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
             b_FirstUpdate = false;
             AnimationPerturber->Update();
         }
-        if(CameraPerturber->Mode != ECameraPerturberMode::FIXED_POSITIONS)
+        if (CameraPerturber->Mode != ECameraPerturberMode::FIXED_POSITIONS)
         {
             UE_LOG(SynthesisEngine, Warning, TEXT("Camera Perturber Mode is not FIXED_POSITION while you are using TOTAL_FIXEDCAMERA function. please re-check the camera perturber setting."));
         }
@@ -535,7 +456,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
             CameraPerturber->Update();
             FixedCameraIndex++;
         }
-        if(FixedCameraIndex >= CameraPoints.Num())
+        if (FixedCameraIndex >= CameraPoints.Num())
         {
             if (EnableAnimationPerturber)
             {
@@ -543,7 +464,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
             }
             if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
                 MaterialPerturber->Update();
-            
+
             FixedCameraIndex = 0;
         }
         UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_IMAGE_AND_KEYPOINTS;
@@ -562,16 +483,15 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
 
         if (EnableDataFlush)
             DataFlushManager->FlushToDataTotalFormat(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
-        UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_STENCIL;
+        UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME;
         break;
 
-    case ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_STENCIL:
-        DataFlushManager->EnablePostProcessVolume1(true);
-        DataFlushManager->EnablePostProcessVolume2(false);
-        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK_STENCIL;
+    case ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME:
+        DataFlushManager->EnablePostProcessVolume(true);
+        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK;
         break;
 
-    case ETotalUpdatePhase::FLUSH_MASK_STENCIL:
+    case ETotalUpdatePhase::FLUSH_MASK:
         platform = UGameplayStatics::GetPlatformName();
         if (platform == TEXT("Mac"))
         {
@@ -584,67 +504,11 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
 
         if (EnableDataFlush)
             DataFlushManager->FlushToDataTotalFormat_MASK(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
-        UpdatePhase_TOTAL = ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_STENCIL;
+        UpdatePhase_TOTAL = ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME;
         break;
 
-    case ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_STENCIL:
-        DataFlushManager->EnablePostProcessVolume1(false);
-        UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_OCCLUSION;
-        break;
-
-    case ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_OCCLUSION:
-        DataFlushManager->EnablePostProcessVolume2(true);
-        UpdatePhase_TOTAL = ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE1;
-        break;
-
-    case ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE1:
-        DataFlushManager->ChangeFoliageScale(FVector(0.f, 0.f, 0.f));
-        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK_OCCLUSION1;
-        break;
-
-    case ETotalUpdatePhase::FLUSH_MASK_OCCLUSION1:
-        platform = UGameplayStatics::GetPlatformName();
-        if (platform == TEXT("Mac"))
-        {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
-        }
-        else
-        {
-            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
-        }
-
-        if (EnableDataFlush) {
-            DataFlushManager->ChangeFoliageScale(FVector(0.f, 0.f, 0.f));
-            DataFlushManager->FlushToDataTotalFormat_OCCLUSION1(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
-        }
-        UpdatePhase_TOTAL = ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE2;
-        break;
-
-    case ETotalUpdatePhase::CHANGE_FOLIAGE_SCALE2:
-        DataFlushManager->ChangeFoliageScale(FVector(1.f, 1.f, 1.f));
-        UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_MASK_OCCLUSION2;
-        break;
-
-    case ETotalUpdatePhase::FLUSH_MASK_OCCLUSION2:
-        platform = UGameplayStatics::GetPlatformName();
-        if (platform == TEXT("Mac"))
-        {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
-        }
-        else
-        {
-            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
-        }
-
-        if (EnableDataFlush) {
-            DataFlushManager->FlushToDataTotalFormat_OCCLUSION2(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
-        }
-        UpdatePhase_TOTAL = ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_OCCLUSION;
-        break;
-
-    case ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME_OCCLUSION:
-        DataFlushManager->EnablePostProcessVolume1(false);
-        DataFlushManager->EnablePostProcessVolume2(false);
+    case ETotalUpdatePhase::DISABLE_POSTPROCESSVOLUME:
+        DataFlushManager->EnablePostProcessVolume(false);
         UpdatePhase_TOTAL = ETotalUpdatePhase::UPDATE_PERTURBERS;
         break;
     }

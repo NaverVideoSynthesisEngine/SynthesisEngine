@@ -176,6 +176,11 @@ UAnimationAsset* FGarmentCollection::GetCurrentClothesAnimation() //Will be depr
 
 bool FGarmentCollection::WillGarmentCombinationBeChanged()
 {
+	if (LoadedCombinations.Num() == 0)
+	{
+		UE_LOG(SynthesisEngine, Error, TEXT("There is no garment settings."));
+		return false;
+	}
 	Garment* garment = GetGarmentByID(LoadedCombinations[CombinationIndex].GarmentIDs[0]);
 	if (garment != nullptr)
 	{

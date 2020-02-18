@@ -3,8 +3,8 @@
 
 #include "DataFlushManager.h"
 
-FDataFlushManager::FDataFlushManager(AActor * Owner, UWorld* World, UCameraComponent* CameraComponent, APostProcessVolume* PostProcessVolume1, APostProcessVolume* PostProcessVolume2, AInstancedFoliageActor* FoliageActor)
-	:world(World), cameraComponent(CameraComponent), owner(Owner), postProcessVolume1(PostProcessVolume1), postProcessVolume2(PostProcessVolume2), foliageActor(FoliageActor)
+FDataFlushManager::FDataFlushManager(AActor * Owner, UWorld* World, UCameraComponent* CameraComponent, APostProcessVolume* PostProcessVolume)
+	:world(World), cameraComponent(CameraComponent), owner(Owner), postProcessVolume(PostProcessVolume)
 {
 	dataID = 1000000;
 }
@@ -74,20 +74,9 @@ void FDataFlushManager::FlushToData(FString path, FString LevelName, FString Act
     dataID++;
 }
 
-void FDataFlushManager::EnablePostProcessVolume1(bool enable)
+void FDataFlushManager::EnablePostProcessVolume(bool enable)
 {
-    postProcessVolume1->bEnabled = enable;
-}
-void FDataFlushManager::EnablePostProcessVolume2(bool enable)
-{
-    if (postProcessVolume2 != nullptr) {
-        postProcessVolume2->bEnabled = enable;
-    }    
-}
-void FDataFlushManager::ChangeFoliageScale(FVector scale) {
-    if (postProcessVolume2 != nullptr) {
-        foliageActor->SetActorScale3D(scale);
-    }
+    postProcessVolume->bEnabled = enable;
 }
 
 void FDataFlushManager::FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
@@ -106,7 +95,7 @@ void FDataFlushManager::FlushToDataCocoFormat(FString path, FString LevelName, F
 
 void FDataFlushManager::FlushToDataCocoFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
-    if(!postProcessVolume1->bEnabled)
+    if(!postProcessVolume->bEnabled)
     {
         UE_LOG(SynthesisEngine, Warning, TEXT("PostProcessVolume is disabled. Please turn on before flushing mask"));
     }
@@ -149,48 +138,16 @@ void FDataFlushManager::FlushToDataTotalFormat(FString path, FString LevelName, 
 
 void FDataFlushManager::FlushToDataTotalFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
-    if (!postProcessVolume1->bEnabled)
+    if (!postProcessVolume->bEnabled)
     {
-        UE_LOG(SynthesisEngine, Warning, TEXT("PostProcessVolume1 is disabled. Please turn on before flushing mask"));
+        UE_LOG(SynthesisEngine, Warning, TEXT("PostProcessVolume is disabled. Please turn on before flushing mask"));
     }
     FString fileName = FString::Printf(TEXT("%012d"), dataID);
     FString maskPath = *FString::Printf(TEXT("%s/%s/%s/mask/%s.png"), *path, *LevelName, *ActorLabel, *fileName);
 
     FScreenshotRequest::RequestScreenshot(maskPath, false, false);
-    if (postProcessVolume2 == nullptr) {
-        dataID++;
-    }
+    dataID++;
 
-}
-
-void FDataFlushManager::FlushToDataTotalFormat_OCCLUSION1(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
-{
-    if (postProcessVolume2 != nullptr) {
-        if (!postProcessVolume2->bEnabled)
-        {
-            UE_LOG(SynthesisEngine, Warning, TEXT("PostProcessVolume2 is disabled. Please turn on before flushing mask"));
-        }
-        FString fileName = FString::Printf(TEXT("%012d"), dataID);
-        FString maskPath = *FString::Printf(TEXT("%s/%s/%s/occlusion1/%s.png"), *path, *LevelName, *ActorLabel, *fileName);
-
-        FScreenshotRequest::RequestScreenshot(maskPath, false, false);
-    }
-}
-
-void FDataFlushManager::FlushToDataTotalFormat_OCCLUSION2(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
-{
-    if (postProcessVolume2 != nullptr) {
-        if (!postProcessVolume2->bEnabled)
-        {
-            UE_LOG(SynthesisEngine, Warning, TEXT("PostProcessVolume2 is disabled. Please turn on before flushing mask"));
-        }
-        FString fileName = FString::Printf(TEXT("%012d"), dataID);
-        FString maskPath = *FString::Printf(TEXT("%s/%s/%s/occlusion2/%s.png"), *path, *LevelName, *ActorLabel, *fileName);
-
-        FScreenshotRequest::RequestScreenshot(maskPath, false, false);
-
-        dataID++;
-    }
 }
 
 void FDataFlushManager::OnChangedEnableProperty(bool IsEnable)

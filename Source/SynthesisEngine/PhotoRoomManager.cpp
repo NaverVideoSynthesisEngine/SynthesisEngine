@@ -94,11 +94,11 @@ void APhotoRoomManager::Update()
 {
 	if (PhotoRoomInstances.IsValidIndex(PhotoRoomIndex))
 	{
-//		PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing();
-//      PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_COCOTEMP();
-//      PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_MPITEMP();
-//      PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_TOTAL();
-        PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA();
+//        PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing();
+//        PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_COCOTEMP();
+//        PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_MPITEMP();
+        PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_TOTAL();
+//        PhotoRoomInstances[PhotoRoomIndex]->UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA();
 	}
     else
     {
