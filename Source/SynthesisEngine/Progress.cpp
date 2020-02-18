@@ -312,3 +312,15 @@ FProgress::~FProgress()
 {
 }
 
+USkeletalMesh* FProgress::GetRandomSkeletalMesh()
+{
+    int randIndex = rand() % AllModels.Num();
+    return AllModels[randIndex];
+}
+
+UAnimationAsset* FProgress::GetRandomHumanAnimation()
+{
+    int randIndex = rand() % AllAnimations.Num();
+    return AllAnimations[randIndex];
+}
+

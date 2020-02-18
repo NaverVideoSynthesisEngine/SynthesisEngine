@@ -97,8 +97,6 @@ public:
 	UPROPERTY(VisibleAnywhere)
 	USkeletalMeshComponent* SkeletalMesh;
 	UPROPERTY(VisibleAnywhere)
-	USkeletalMeshComponent* Garment;
-	UPROPERTY(VisibleAnywhere)
 	UCameraComponent* CameraComponent;
 	UPROPERTY(VisibleAnywhere, Category = SynthesisEngine)
 	class UAnimationPerturberComponent* AnimationPerturber;
@@ -113,6 +111,11 @@ public: //Multiple Clothes
 	static const int GarmentSocketNumber;
 	UPROPERTY(VisibleAnywhere)
 	TArray<USkeletalMeshComponent*> Garments;
+    
+    static const int MultiPersonSocketNumber;
+    UPROPERTY(VisibleAnywhere)
+    TArray<class UMultiPersonPerturberComponent*> MultiPeople;
+    //MultiPeople garments도 추후에 필요할듯
 
 protected:
 	// Called when the game starts or when spawned

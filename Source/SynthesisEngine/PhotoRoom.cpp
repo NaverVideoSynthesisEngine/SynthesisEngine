@@ -2,9 +2,11 @@
 
 
 #include "PhotoRoom.h"
+#include "MultiPersonPerturberComponent.h"
 #include "AnimationPerturberComponent.h"
 
 const int APhotoRoom::GarmentSocketNumber = 5;
+const int APhotoRoom::MultiPersonSocketNumber = 3;
 
 // Sets default values
 APhotoRoom::APhotoRoom()
@@ -13,14 +15,12 @@ APhotoRoom::APhotoRoom()
 	PrimaryActorTick.bCanEverTick = true;
 
 	SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MainCharacter"));
-	Garment = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Garment"));
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	CameraPerturber = CreateDefaultSubobject<UCameraPerturberComponent>(TEXT("Camera Perturber"));
 	MaterialPerturber = CreateDefaultSubobject<UMaterialPerturberComponent>(TEXT("Material Perturber"));
 	AnimationPerturber = CreateDefaultSubobject<UAnimationPerturberComponent>(TEXT("Animation Perturber"));
 
 	RootComponent = SkeletalMesh;
-	Garment->SetupAttachment(SkeletalMesh);
 	CameraComponent->SetupAttachment(SkeletalMesh);
 	CameraPerturber->SetupAttachment(SkeletalMesh);
 	MaterialPerturber->SetupAttachment(SkeletalMesh);
@@ -32,6 +32,31 @@ APhotoRoom::APhotoRoom()
 		USkeletalMeshComponent* TempGarment = CreateDefaultSubobject<USkeletalMeshComponent>(*ID);
 		Garments.Add(TempGarment);
 	}
+    
+    for (int i = 0; i < MultiPersonSocketNumber; i++)
+    {
+        /*
+         Initialize fields of specific class at the outside of the class
+         This seems really inconvinent and unnatural.
+         I wanted to initializa them on inside of the class but I encountered mysterious run-time error.
+         Everytime I assign a non-zero value to the transfrom(location), UE shuts down.
+         I think this is because all of the components should be created before its constructor ends.
+        */
+        FString ID = FString::Printf(TEXT("MultiPerson%d"), i);
+        UMultiPersonPerturberComponent* TempPerson = CreateDefaultSubobject<UMultiPersonPerturberComponent>(*ID);
+        TempPerson->SetupAttachment(SkeletalMesh);
+        FString CharacterName = FString::Printf(TEXT("Character_%d"), i);
+
+        TempPerson->SkeletalMesh = CreateDefaultSubobject<USkeletalMeshComponent>(*CharacterName);
+        TempPerson->SkeletalMesh->SetupAttachment(TempPerson);
+        for (int j = 0; j < GarmentSocketNumber; j++)
+        {
+            FString GarmentName = FString::Printf(TEXT("Garment_%d_%d"), i,j);
+            USkeletalMeshComponent* TempGarment = CreateDefaultSubobject<USkeletalMeshComponent>(*GarmentName);
+            TempPerson->Garments.Add(TempGarment);
+        }
+        MultiPeople.Add(TempPerson);
+    }
 
 	LateDataFlushingCount = 0;
 	b_ShouldUpdate = true;
@@ -47,7 +72,10 @@ void APhotoRoom::PostInitializeComponents()
 	AnimationPerturber->Init(this, this->SkeletalMesh, this->Garments); //For Multiple Clothes
 	MaterialPerturber->Init(this->SkeletalMesh, this->Garments); //For Multiple Clothes
 	CameraPerturber->Init(this->SkeletalMesh, this->CameraComponent);
-
+    for (int i = 0; i < MultiPersonSocketNumber; i++)
+    {
+        MultiPeople[i]->Init(this);
+    }
 	AnimationPerturber->OnClothChanged().AddLambda([=]()
 	{
 		if (MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_CLOTH_IS_CHANGED)
@@ -356,8 +384,13 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
             CameraPerturber->Update();
         if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
             MaterialPerturber->Update();
+            
+        for(UMultiPersonPerturberComponent * multi : MultiPeople)
+        {
+            multi->Update();
+        }
         UpdatePhase_TOTAL = ETotalUpdatePhase::FLUSH_IMAGE_AND_KEYPOINTS;
-
+            
         if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
         {
             b_FirstUpdate = false;
@@ -378,7 +411,14 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
         }
 
         if (EnableDataFlush)
+        {
             DataFlushManager->FlushToDataTotalFormat(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+            for(int i = 0 ; i < MultiPersonSocketNumber; i++)
+            {
+                
+                DataFlushManager->FlushToDataTotalFormat(path, *GetWorld()->GetName(), MultiPeople[i]->GetName(), MultiPeople[i]->SkeletalMesh, this->CameraComponent);
+            }
+        }
         UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME_STENCIL;
         break;
 

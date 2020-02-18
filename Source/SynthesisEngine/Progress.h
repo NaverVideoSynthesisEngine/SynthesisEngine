@@ -91,4 +91,7 @@ public: // New features
 	bool WillGarmentCombinationBeChanged();
 	void ResetGarmentIndex();
 
+public: // New feature (02.18) /* for MultiPersonPerturberComponent */
+    USkeletalMesh* GetRandomSkeletalMesh();
+    UAnimationAsset* GetRandomHumanAnimation();
 };
