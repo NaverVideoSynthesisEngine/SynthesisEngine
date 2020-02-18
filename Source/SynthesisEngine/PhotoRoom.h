@@ -19,7 +19,7 @@ enum class EUpdateProtocol : uint8
 	UPDATE_EVERY_FRAME UMETA(DisplayName = "Update Every Frame"),
 	UPDATE_CLOTH_IS_CHANGED UMETA(DisaplyName = "Update if cloth is changed"),
 	UPDATE_COMBINATION_IS_CHANGED UMETA(DisaplyName = "Update if combination is changed"),
-	UPDATE_COMBINATION_ITERATION UMETA(DisaplyName = "Update when combination is being iterated")
+	UPDATE_COMBINATION_ITERATION UMETA(DisaplyName = "Update when combination is being iterated"),
 	NONE UMETA(DisplayName = "Default")
 };
 
