@@ -56,8 +56,11 @@ private:
     
     ECocoUpdatePhase UpdatePhase_COCO;
 	ETotalUpdatePhase UpdatePhase_TOTAL;
-    
+
+	int FixedCameraIndex = 0;
 	int IterationIndex = 0;
+
+	TArray<USceneComponent*> CameraPoints;
 public:
 	// Sets default values for this pawn's properties
 	APhotoRoom();
