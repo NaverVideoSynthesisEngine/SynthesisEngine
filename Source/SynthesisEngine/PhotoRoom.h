@@ -20,7 +20,7 @@ enum class EUpdateProtocol : uint8
 	UPDATE_CLOTH_IS_CHANGED UMETA(DisaplyName = "Update if cloth is changed"),
 	UPDATE_COMBINATION_IS_CHANGED UMETA(DisaplyName = "Update if combination is changed"),
 	UPDATE_COMBINATION_ITERATION UMETA(DisaplyName = "Update when combination is being iterated"),
-    NONE UMETA(DisplayName = "Default")
+	NONE UMETA(DisplayName = "Default")
 };
 
 UENUM(BlueprintType)
@@ -39,15 +39,9 @@ enum class ETotalUpdatePhase : uint8
 	/* Due to randome order of taking screenshot. We need to separate steps into five steps. */
 	UPDATE_PERTURBERS UMETA(DisplayName = "Update perturbers"),
 	FLUSH_IMAGE_AND_KEYPOINTS UMETA(DisplayName = "Flush image and keypoints data first"),
-	ENABLE_POSTPROCESSVOLUME_STENCIL UMETA(DisplayName = "Enable PostProcessVolume1"),
-	FLUSH_MASK_STENCIL UMETA(DisplayName = "Flush stencil mask image"),
-	DISABLE_POSTPROCESSVOLUME_STENCIL UMETA(DisplayName = "Disable PostProcessVolume1"),
-	ENABLE_POSTPROCESSVOLUME_OCCLUSION UMETA(DisplayName = "Enable PostProcessVolume2"),
-	CHANGE_FOLIAGE_SCALE1 UMETA(DisplayName = "Chage foliage actor's scale 0,0,0"),
-	FLUSH_MASK_OCCLUSION1 UMETA(DisplayName = "Flush occlusion mask image1"),
-	CHANGE_FOLIAGE_SCALE2 UMETA(DisplayName = "Chage foliage actor's scale 1,1,1"),
-	FLUSH_MASK_OCCLUSION2 UMETA(DisplayName = "Flush occlusion mask image2"),
-	DISABLE_POSTPROCESSVOLUME_OCCLUSION UMETA(DisplayName = "Disable PostProcessVolume2"),
+	ENABLE_POSTPROCESSVOLUME UMETA(DisplayName = "Enable PostProcessVolume"),
+	FLUSH_MASK UMETA(DisplayName = "Flush stencil mask image"),
+	DISABLE_POSTPROCESSVOLUME UMETA(DisplayName = "Disable PostProcessVolume"),
 };
 
 UCLASS()
@@ -63,10 +57,7 @@ private:
     ECocoUpdatePhase UpdatePhase_COCO;
 	ETotalUpdatePhase UpdatePhase_TOTAL;
     
-    int FixedCameraIndex = 0;
 	int IterationIndex = 0;
-    
-    TArray<USceneComponent*> CameraPoints;
 public:
 	// Sets default values for this pawn's properties
 	APhotoRoom();
@@ -82,7 +73,7 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Option)
 	bool PerturbCameraAndMaterialOnStart = true;
-    
+
 	UPROPERTY(EditAnywhere, Category = Option)
 	int IterationCount = 1;
 
@@ -134,8 +125,7 @@ public:
     void UpdateWithLateDataFlushing_COCOTEMP();
     void UpdateWithLateDataFlushing_MPITEMP();
 	void UpdateWithLateDataFlushing_TOTAL();
-    
-    void UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA();
+	void UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA();
     
 	void Skip3DModel();
 	void Skip3DModelAnimation();

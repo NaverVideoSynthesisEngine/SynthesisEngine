@@ -50,25 +50,19 @@ private:
 	UWorld* world;
 	UCameraComponent* cameraComponent;
 	AActor * owner;
-    APostProcessVolume* postProcessVolume1;
-    APostProcessVolume* postProcessVolume2;
-    AInstancedFoliageActor* foliageActor;
+    APostProcessVolume* postProcessVolume;
 public:
-	FDataFlushManager(AActor * Owner, UWorld * World, UCameraComponent* CameraComponent, APostProcessVolume* PostProcessVolume1, APostProcessVolume* PostProcessVolume2, AInstancedFoliageActor* FoliageActor);
+	FDataFlushManager(AActor * Owner, UWorld * World, UCameraComponent* CameraComponent, APostProcessVolume* PostProcessVolume);
 	~FDataFlushManager();
     
     EJointVisibility VisibilityCheck(FVector location, float threshold);
-    void EnablePostProcessVolume1(bool enable);
-    void EnablePostProcessVolume2(bool enable);
-    void ChangeFoliageScale(FVector scale);
+    void EnablePostProcessVolume(bool enable);
 	void FlushToDataCocoFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
     void FlushToDataCocoFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
 	void FlushToData(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);
     void FlushToDataMPIFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent * Mesh, UCameraComponent* CameraComponent);
     void FlushToDataTotalFormat(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
     void FlushToDataTotalFormat_MASK(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
-    void FlushToDataTotalFormat_OCCLUSION1(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
-    void FlushToDataTotalFormat_OCCLUSION2(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent);
 	void OnChangedEnableProperty(bool IsEnable);
 };
 
@@ -296,7 +290,6 @@ private:
             TEXT("Neck"), TEXT("Head"), TEXT("HeadTop_End"),
             TEXT("LeftShoulder"), TEXT("LeftArm"), TEXT("LeftForeArm"), TEXT("LeftHand"), TEXT("LeftPalm"),
             TEXT("RightShoulder"), TEXT("RightArm"), TEXT("RightForeArm"), TEXT("RightHand"), TEXT("RightPalm"),
-
             TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"), TEXT("LeftToeBase"), TEXT("LeftToe_End"),
             TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"), TEXT("RightToeBase"), TEXT("RightToe_End")
         };
