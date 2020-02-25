@@ -207,11 +207,11 @@ private:
     }
     static FString CocoSkeleton(int index) {
       FString skeleton[] = { TEXT("Nose"), TEXT("LeftEye"),TEXT("RightEye"),
-          TEXT("LeftEar"), TEXT("RightEar"),
-          TEXT("LeftArm"), TEXT("LeftForeArm"), TEXT("LeftHand"),
-          TEXT("RightArm"), TEXT("RightForeArm"), TEXT("RightHand"),
-          TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"),
-          TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"),
+          TEXT("LeftEar"), TEXT("RightEar"),TEXT("LeftArm"),
+          TEXT("RightArm"), TEXT("LeftForeArm"), TEXT("RightForeArm"),
+          TEXT("LeftHand"), TEXT("RightHand"), TEXT("LeftUpLeg"),
+          TEXT("RightUpLeg"), TEXT("LeftLeg"), TEXT("RightLeg"),
+          TEXT("LeftFoot"), TEXT("RightFoot")
       };
     /*
      Left : coco joint names / Right : ue4 skeleton joint names
@@ -311,11 +311,11 @@ private:
     }
     static FString CocoSkeleton(int index) {
         FString skeleton[] = { TEXT("Nose"), TEXT("LeftEye"),TEXT("RightEye"),
-            TEXT("LeftEar"), TEXT("RightEar"),
-            TEXT("LeftArm"), TEXT("LeftForeArm"), TEXT("LeftHand"),
-            TEXT("RightArm"), TEXT("RightForeArm"), TEXT("RightHand"),
-            TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"),
-            TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"),
+            TEXT("LeftEar"), TEXT("RightEar"),TEXT("LeftArm"),
+            TEXT("RightArm"), TEXT("LeftForeArm"), TEXT("RightForeArm"),
+            TEXT("LeftHand"), TEXT("RightHand"), TEXT("LeftUpLeg"),
+            TEXT("RightUpLeg"), TEXT("LeftLeg"), TEXT("RightLeg"),
+            TEXT("LeftFoot"), TEXT("RightFoot")
         };
         return skeleton[index];
     }
