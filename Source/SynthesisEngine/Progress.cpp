@@ -324,3 +324,12 @@ UAnimationAsset* FProgress::GetRandomHumanAnimation()
     return AllAnimations[randIndex];
 }
 
+void FProgress::GetRandomClothesMeshesAndAnimations(USkeletalMesh * HumanMesh, UAnimationAsset * HumanAnimation, TArray<USkeletalMesh*>& ClothesMeshes, TArray<UAnimationAsset*>& ClothesAnimations)
+{
+    FString SkeletonMeshID = HumanMesh->GetName();
+    FString AnimationID = HumanAnimation->GetName();
+    
+    LoadedGarments->GetRandomClothesMeshesAndAnimations(SkeletonMeshID, AnimationID, ClothesMeshes, ClothesAnimations);
+}
+
+

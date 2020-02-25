@@ -75,7 +75,7 @@ bool FGarmentCollection::MoveToNextClothes()
 		}
 		return false;
 	}
-	Garment* garment = GetGarmentByID(LoadedCombinations[CombinationIndex].GarmentIDs[0]);
+	Garment* garment = GetGarmentByID(LoadedGarments, LoadedCombinations[CombinationIndex].GarmentIDs[0]);
 	if (garment != nullptr)
 	{
 		if (garment->Meshes.IsValidIndex(GarmentIndex + 1))    //����ȭ �� ���� cloth ��������
@@ -89,7 +89,7 @@ bool FGarmentCollection::MoveToNextClothes()
 		{
 			GarmentIndex = 0;
 			CombinationIndex++;
-			garment = GetGarmentByID(LoadedCombinations[CombinationIndex].GarmentIDs[0]);
+			garment = GetGarmentByID(LoadedGarments, LoadedCombinations[CombinationIndex].GarmentIDs[0]);
 			CurrentClothesMesh = garment->Meshes[GarmentIndex];
 			CurrentClothesAnimation = garment->Animations[GarmentIndex];
 			return true;
@@ -105,25 +105,25 @@ bool FGarmentCollection::MoveToNextClothes_MC()
 	{
 		if (LoadedCombinations.IsValidIndex(0))
 		{
-			UpdateMeshAndAnimationUsingCombination(LoadedCombinations[CombinationIndex]);
+			UpdateMeshAndAnimationUsingCombination(&CurrentClothesMeshes, &CurrentClothesAnimations, LoadedCombinations[CombinationIndex]);
 			return true;
 		}
 		return false;
 	}
-	Garment* garment = GetGarmentByID(LoadedCombinations[CombinationIndex].GarmentIDs[0]);
+	Garment* garment = GetGarmentByID(LoadedGarments, LoadedCombinations[CombinationIndex].GarmentIDs[0]);
 	if (garment != nullptr)
 	{
 		if (garment->Meshes.IsValidIndex(GarmentIndex + 1)) //Move to next mesh within a Garment.
 		{
 			GarmentIndex++;
-			UpdateMeshAndAnimationUsingCombination(LoadedCombinations[CombinationIndex]);
+			UpdateMeshAndAnimationUsingCombination(&CurrentClothesMeshes, &CurrentClothesAnimations, LoadedCombinations[CombinationIndex]);
 			return true;
 		}
 		else if (LoadedCombinations.IsValidIndex(CombinationIndex + 1)) //Move to next combination
 		{
 			GarmentIndex = 0;
 			CombinationIndex++;
-			UpdateMeshAndAnimationUsingCombination(LoadedCombinations[CombinationIndex]);
+			UpdateMeshAndAnimationUsingCombination(&CurrentClothesMeshes, &CurrentClothesAnimations, LoadedCombinations[CombinationIndex]);
 			return true;
 		}
 	}
@@ -136,19 +136,19 @@ bool FGarmentCollection::MoveToNextClothes_MC(bool& isCombinationChanged)
 	{
 		if (LoadedCombinations.IsValidIndex(0))
 		{
-			UpdateMeshAndAnimationUsingCombination(LoadedCombinations[CombinationIndex]);
+			UpdateMeshAndAnimationUsingCombination(&CurrentClothesMeshes, &CurrentClothesAnimations, LoadedCombinations[CombinationIndex]);
 			isCombinationChanged = false;
 			return true;
 		}
 		return false;
 	}
-	Garment* garment = GetGarmentByID(LoadedCombinations[CombinationIndex].GarmentIDs[0]);
+	Garment* garment = GetGarmentByID(LoadedGarments, LoadedCombinations[CombinationIndex].GarmentIDs[0]);
 	if (garment != nullptr)
 	{
 		if (garment->Meshes.IsValidIndex(GarmentIndex + 1)) //Move to next mesh within a Garment.
 		{
 			GarmentIndex++;
-			UpdateMeshAndAnimationUsingCombination(LoadedCombinations[CombinationIndex]);
+			UpdateMeshAndAnimationUsingCombination(&CurrentClothesMeshes, &CurrentClothesAnimations, LoadedCombinations[CombinationIndex]);
 			isCombinationChanged = false;
 			return true;
 		}
@@ -156,7 +156,7 @@ bool FGarmentCollection::MoveToNextClothes_MC(bool& isCombinationChanged)
 		{
 			GarmentIndex = 0;
 			CombinationIndex++;
-			UpdateMeshAndAnimationUsingCombination(LoadedCombinations[CombinationIndex]);
+			UpdateMeshAndAnimationUsingCombination(&CurrentClothesMeshes, &CurrentClothesAnimations, LoadedCombinations[CombinationIndex]);
 			isCombinationChanged = true;
 			return true;
 		}
@@ -181,7 +181,7 @@ bool FGarmentCollection::WillGarmentCombinationBeChanged()
 		UE_LOG(SynthesisEngine, Error, TEXT("There is no garment settings."));
 		return false;
 	}
-	Garment* garment = GetGarmentByID(LoadedCombinations[CombinationIndex].GarmentIDs[0]);
+	Garment* garment = GetGarmentByID(LoadedGarments, LoadedCombinations[CombinationIndex].GarmentIDs[0]);
 	if (garment != nullptr)
 	{
 		return CurrentClothesAnimations.Num() >= 1 && !garment->Meshes.IsValidIndex(GarmentIndex + 1);
@@ -200,7 +200,7 @@ void FGarmentCollection::ResetGarmentIndex()
 	GarmentIndex = 0;
 	if (LoadedCombinations.IsValidIndex(0))
 	{
-		UpdateMeshAndAnimationUsingCombination(LoadedCombinations[CombinationIndex]);
+		UpdateMeshAndAnimationUsingCombination(&CurrentClothesMeshes, &CurrentClothesAnimations, LoadedCombinations[CombinationIndex]);
 	}
 }
 
@@ -218,36 +218,64 @@ void FGarmentCollection::LoadGarments(FString SkeletalMeshID, FString AnimationI
 {
 	//    Empty();
 	Empty_MC();
-	LoadJsonSetting(SkeletalMeshID);
-	LoadAlembics(SkeletalMeshID, AnimationID);
+	LoadJsonSetting(SkeletalMeshID, &(this->LoadedCombinations));
+	LoadAlembics(SkeletalMeshID, AnimationID, &(this->LoadedClothesMesh), &(this->LoadedClothesAnimation), &(this->LoadedGarments));
+    if (LoadedClothesMesh.Num() != 0 && LoadedClothesAnimation.Num() != 0)
+    {
+        isLoadedProperly = true;
+    }
+    else
+    {
+        UE_LOG(SynthesisEngine, Warning, TEXT("No Clothes : Mesh = %s , Animation = %s"), *SkeletalMeshID, *AnimationID);
+        isLoadedProperly = false;
+    }
 }
 
-Garment* FGarmentCollection::GetGarmentByID(FString GarmentID)
+Garment* FGarmentCollection::GetGarmentByID(TArray<Garment>& TargetGarmentArray, FString GarmentID)
 {
-	Garment* garment = LoadedGarments.FindByPredicate([=](const Garment& InItem)
-	{
-		return InItem.GarmentID == GarmentID;
-	});
-	return garment;
+    Garment* garment = TargetGarmentArray.FindByPredicate([=](Garment& InItem)
+    {
+        return InItem.GarmentID == GarmentID;
+    });
+    return garment;
 }
 
-void FGarmentCollection::UpdateMeshAndAnimationUsingCombination(Combination Combination)
+void FGarmentCollection::UpdateMeshAndAnimationUsingCombination(TArray<USkeletalMesh*> * TargetMeshes, TArray<UAnimationAsset*> * TargetAnimations, Combination Combination)
 {
-	CurrentClothesMeshes.Empty();
-	CurrentClothesAnimations.Empty();
+	TargetMeshes->Empty();
+	TargetAnimations->Empty();
 	for (const auto& id : Combination.GarmentIDs)
 	{
-		Garment* garment = GetGarmentByID(id);
+		Garment* garment = GetGarmentByID(LoadedGarments, id);
 		if (garment != NULL) //�� ã�� �� ���� (Garment�� �ֽô��� ���� ���)
 		{
-			CurrentClothesMeshes.Add(garment->Meshes[GarmentIndex]);
-			CurrentClothesAnimations.Add(garment->Animations[GarmentIndex]);
+			TargetMeshes->Add(garment->Meshes[GarmentIndex]);
+			TargetAnimations->Add(garment->Animations[GarmentIndex]);
 		}
 		else
 		{
 			UE_LOG(SynthesisEngine, Error, TEXT("Search Garment by ID failed - Target ID : %s"), (*id));
 		}
 	}
+}
+
+void FGarmentCollection::UpdateMeshAndAnimationUsingCombination(TArray<USkeletalMesh*> * TargetMeshes, TArray<UAnimationAsset*> * TargetAnimations, TArray<Garment>& TargetGarmentArray, Combination Combination)
+{
+    TargetMeshes->Empty();
+    TargetAnimations->Empty();
+    for (const auto& id : Combination.GarmentIDs)
+    {
+        Garment* garment = GetGarmentByID(TargetGarmentArray ,id);
+        if (garment != NULL) //�� ã�� �� ���� (Garment�� �ֽô��� ���� ���)
+        {
+            TargetMeshes->Add(garment->Meshes[GarmentIndex]);
+            TargetAnimations->Add(garment->Animations[GarmentIndex]);
+        }
+        else
+        {
+            UE_LOG(SynthesisEngine, Error, TEXT("Search Garment by ID failed - Target ID : %s"), (*id));
+        }
+    }
 }
 
 bool FGarmentCollection::CheckValidation(TArray<USkeletalMesh*> Meshes, TArray<UAnimationAsset*> Animations)
@@ -271,7 +299,7 @@ bool FGarmentCollection::CheckValidation(TArray<USkeletalMesh*> Meshes, TArray<U
 	return true;
 }
 
-void FGarmentCollection::LoadJsonSetting(FString SkeletalMeshID)
+void FGarmentCollection::LoadJsonSetting(FString SkeletalMeshID, TArray<Combination> * LoadedCombinations)
 {
 	FString RelativeFullPath = FString::Printf(TEXT("/Game/Models/%s_Setting.json"), *SkeletalMeshID);
 	FString FullPath = FUtil::Util_GetFullPath(RelativeFullPath);
@@ -299,12 +327,12 @@ void FGarmentCollection::LoadJsonSetting(FString SkeletalMeshID)
 				comb.GarmentIDs.Add(Combination_Json[j]->AsString());
 				//UE_LOG(SynthesisEngine, Warning, TEXT("    %s"), *(Combination[j]->AsString()));
 			}
-			LoadedCombinations.Add(comb);
+			(*LoadedCombinations).Add(comb);
 		}
 	}
 }
 
-void FGarmentCollection::LoadAlembics(FString SkeletalMeshID, FString AnimationID)
+void FGarmentCollection::LoadAlembics(FString SkeletalMeshID, FString AnimationID, TArray<USkeletalMesh*> * LoadedClothesMesh, TArray<UAnimationAsset*> * LoadedClothesAnimation, TArray<Garment> * LoadedGarments)
 {
 	FString RelativeFullPath = FString::Printf(TEXT("%s/%s/%s"), *this->BasePath, *SkeletalMeshID, *AnimationID);
 	FString FullPath = FUtil::Util_GetFullPath(RelativeFullPath);
@@ -329,7 +357,7 @@ void FGarmentCollection::LoadAlembics(FString SkeletalMeshID, FString AnimationI
 			UAnimSequence* Anim = Cast<UAnimSequence>(Asset);
 			if (Anim != NULL)
 			{
-				LoadedClothesAnimation.Add(Anim);
+				(*LoadedClothesAnimation).Add(Anim);
 				//UE_LOG(SynthesisEngine, Warning, TEXT("Anim Name : %s"), *(Asset->GetName()));
 				continue;
 			}
@@ -342,7 +370,7 @@ void FGarmentCollection::LoadAlembics(FString SkeletalMeshID, FString AnimationI
 			USkeletalMesh* Mesh = Cast<USkeletalMesh>(Asset);
 			if (Mesh != NULL)
 			{
-				LoadedClothesMesh.Add(Mesh);
+				(*LoadedClothesMesh).Add(Mesh);
 				//UE_LOG(SynthesisEngine, Warning, TEXT("Mesh Name : %s"), *(Asset->GetName()));
 			}
 			else
@@ -351,28 +379,27 @@ void FGarmentCollection::LoadAlembics(FString SkeletalMeshID, FString AnimationI
 			}
 		}
 	}
-	if (LoadedClothesMesh.Num() != 0 && LoadedClothesAnimation.Num() != 0)
+	if ((*LoadedClothesMesh).Num() != 0 && (*LoadedClothesAnimation).Num() != 0)
 	{
-		LoadedClothesMesh.Sort();
-		LoadedClothesAnimation.Sort();
+		(*LoadedClothesMesh).Sort();
+		(*LoadedClothesAnimation).Sort();
 
-		CheckValidation(LoadedClothesMesh, LoadedClothesAnimation);
-		isLoadedProperly = true;
+        CheckValidation(*LoadedClothesMesh, *LoadedClothesAnimation);
 
 		int prev_index = 0;
 
-		FString MeshIdentifier = FUtil::ExtractGarmentIdentifierFromFullPath(LoadedClothesMesh[0]->GetFullName());
-		for (int i = 1; i < LoadedClothesMesh.Num(); i++)
+		FString MeshIdentifier = FUtil::ExtractGarmentIdentifierFromFullPath((*LoadedClothesMesh)[0]->GetFullName());
+		for (int i = 1; i < (*LoadedClothesMesh).Num(); i++)
 		{
-			if (MeshIdentifier != FUtil::ExtractGarmentIdentifierFromFullPath(LoadedClothesMesh[i]->GetFullName()))
+			if (MeshIdentifier != FUtil::ExtractGarmentIdentifierFromFullPath((*LoadedClothesMesh)[i]->GetFullName()))
 			{				
-				Garment* temp = GetGarmentByID(MeshIdentifier);
+				Garment* temp = GetGarmentByID((*LoadedGarments), MeshIdentifier);
 				if (temp != nullptr)
 				{
 					for (int j = prev_index; j < i; j++)
 					{
-						temp->Meshes.Add(LoadedClothesMesh[j]);
-						temp->Animations.Add(LoadedClothesAnimation[j]);
+						temp->Meshes.Add((*LoadedClothesMesh)[j]);
+						temp->Animations.Add((*LoadedClothesAnimation)[j]);
 					}
 				}
 				else
@@ -381,44 +408,65 @@ void FGarmentCollection::LoadAlembics(FString SkeletalMeshID, FString AnimationI
 					garment.GarmentID = MeshIdentifier;
 					for (int j = prev_index; j < i; j++)
 					{
-						garment.Meshes.Add(LoadedClothesMesh[j]);
-						garment.Animations.Add(LoadedClothesAnimation[j]);
+						garment.Meshes.Add((*LoadedClothesMesh)[j]);
+						garment.Animations.Add((*LoadedClothesAnimation)[j]);
 					}
-					LoadedGarments.Add(garment);
+					(*LoadedGarments).Add(garment);
 					//UE_LOG(SynthesisEngine, Warning, TEXT("Garment Load : %s"), *MeshIdentifier);
 				}
 				
-				MeshIdentifier = FUtil::ExtractGarmentIdentifierFromFullPath(LoadedClothesMesh[i]->GetFullName());
+				MeshIdentifier = FUtil::ExtractGarmentIdentifierFromFullPath((*LoadedClothesMesh)[i]->GetFullName());
 				prev_index = i;
 			}
 		}
-		FString lastID = FUtil::ExtractGarmentIdentifierFromFullPath(LoadedClothesMesh[prev_index]->GetFullName());
-		Garment* tempLast = GetGarmentByID(lastID);
+		FString lastID = FUtil::ExtractGarmentIdentifierFromFullPath((*LoadedClothesMesh)[prev_index]->GetFullName());
+		Garment* tempLast = GetGarmentByID((*LoadedGarments), lastID);
 		if (tempLast != nullptr)
 		{
-			for (int j = prev_index; j < LoadedClothesMesh.Num(); j++)
+			for (int j = prev_index; j < (*LoadedClothesMesh).Num(); j++)
 			{
-				tempLast->Meshes.Add(LoadedClothesMesh[j]);
-				tempLast->Animations.Add(LoadedClothesAnimation[j]);
+				tempLast->Meshes.Add((*LoadedClothesMesh)[j]);
+				tempLast->Animations.Add((*LoadedClothesAnimation)[j]);
 			}
 		}
 		else
 		{
 			Garment lastGarment;
 			lastGarment.GarmentID = lastID;
-			for (int j = prev_index; j < LoadedClothesMesh.Num(); j++)
+			for (int j = prev_index; j < (*LoadedClothesMesh).Num(); j++)
 			{
-				lastGarment.Meshes.Add(LoadedClothesMesh[j]);
-				lastGarment.Animations.Add(LoadedClothesAnimation[j]);
+				lastGarment.Meshes.Add((*LoadedClothesMesh)[j]);
+				lastGarment.Animations.Add((*LoadedClothesAnimation)[j]);
 			}
 			//UE_LOG(SynthesisEngine, Warning, TEXT("Garment Load : %s"), *lastGarment.GarmentID);
-			LoadedGarments.Add(lastGarment);
+			(*LoadedGarments).Add(lastGarment);
 		}
 		
 	}
-	else
-	{
-		UE_LOG(SynthesisEngine, Warning, TEXT("No Clothes : Mesh = %s , Animation = %s"), *SkeletalMeshID, *AnimationID);
-		isLoadedProperly = false;
-	}
+}
+
+/* The Array parameters of this function will be cleared. Be careful to call this function. */
+void FGarmentCollection::GetRandomClothesMeshesAndAnimations(FString SkeletalMeshID, FString AnimationID,
+TArray<USkeletalMesh*>& ClothesMeshes, TArray<UAnimationAsset*>& ClothesAnimations)
+{
+    ClothesMeshes.Empty();
+    ClothesAnimations.Empty();
+    
+    TArray<Combination> combinations;
+    TArray<USkeletalMesh*> clothesMeshes;
+    TArray<UAnimationAsset*> clothesAnimations;
+    TArray<Garment> garments;
+    
+    TArray<USkeletalMesh*> meshesToReturn;
+    TArray<UAnimationAsset*> animationsToReturn;
+    
+    /* 1. Load Json Setting Locally */
+    LoadJsonSetting(SkeletalMeshID, &(combinations));
+    /* 2. Load Actual Alembic files Locally */
+    LoadAlembics(SkeletalMeshID, AnimationID, &(clothesMeshes), &(clothesAnimations), &(garments));
+    /* 3. Pick Random Combination. (Combination is initialized on Step 1) And Get Garment */
+    int index = rand() % combinations.Num();
+    
+    /* 4. UpdateMeshAndAnimationUsingCombination 의 로직처럼 진행 (랜덤하게 뽑은 combination으로) */
+    UpdateMeshAndAnimationUsingCombination(&ClothesMeshes, &ClothesAnimations, garments, combinations[index]);
 }

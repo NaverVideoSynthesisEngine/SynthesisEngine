@@ -45,16 +45,18 @@ private:
 	TArray<Combination> LoadedCombinations;
 
 	bool CheckValidation(TArray<USkeletalMesh*> Meshes, TArray<UAnimationAsset*> Animations);
-	void LoadJsonSetting(FString SkeletalMeshID);
-	void LoadAlembics(FString SkeletalMeshID, FString AnimationID);
-
-	Garment* GetGarmentByID(FString GarmentID);
+	void LoadJsonSetting(FString SkeletalMeshID, TArray<Combination> * LoadedCombinations);
+	void LoadAlembics(FString SkeletalMeshID, FString AnimationID, TArray<USkeletalMesh*> * LoadedClothesMesh,
+                      TArray<UAnimationAsset*> * LoadedClothesAnimation, TArray<Garment> * LoadedGarments);
+    
+    Garment* GetGarmentByID(TArray<Garment>& TargetGarmentArray, FString GarmentID);
 private: // New features
 	int CombinationIndex;
 	TArray<USkeletalMesh*> CurrentClothesMeshes;
 	TArray<UAnimationAsset*> CurrentClothesAnimations;
 
-	void UpdateMeshAndAnimationUsingCombination(Combination Combination);
+    void UpdateMeshAndAnimationUsingCombination(TArray<USkeletalMesh*> * TargetMeshes, TArray<UAnimationAsset*> * TargetAnimations, Combination Combination);
+    void UpdateMeshAndAnimationUsingCombination(TArray<USkeletalMesh*> * TargetMeshes, TArray<UAnimationAsset*> * TargetAnimations, TArray<Garment>& TargetGarmentArray, Combination Combination);
 public:
 	//Load All kind of garments under specific human and specific animation. for example, Sleeveless and Training Pants animation which are recorded using 'Ybot' and 'Pointing'
 	void LoadGarments(FString SkeletalMeshID, FString AnimationID);
@@ -85,5 +87,7 @@ public: // New features
 	TArray<USkeletalMesh*> GetCurrentClothesMeshes();
 	TArray<UAnimationAsset*> GetCurrentClothesAnimations();
 
-
+public: // New feature (02.20) /* for MultiPersonPerturberComponent */
+    void GetRandomClothesMeshesAndAnimations(FString SkeletalMeshID, FString AnimationID,
+                                             TArray<USkeletalMesh*>& ClothesMeshes, TArray<UAnimationAsset*>& ClothesAnimations);
 };
