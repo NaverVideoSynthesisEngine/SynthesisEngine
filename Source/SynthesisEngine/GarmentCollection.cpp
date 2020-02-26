@@ -268,8 +268,11 @@ void FGarmentCollection::UpdateMeshAndAnimationUsingCombination(TArray<USkeletal
         Garment* garment = GetGarmentByID(TargetGarmentArray ,id);
         if (garment != NULL) //�� ã�� �� ���� (Garment�� �ֽô��� ���� ���)
         {
-            TargetMeshes->Add(garment->Meshes[GarmentIndex]);
-            TargetAnimations->Add(garment->Animations[GarmentIndex]);
+            for(int i = 0; i < garment->Meshes.Num(); i++)
+            {
+                TargetMeshes->Add(garment->Meshes[i]);
+                TargetAnimations->Add(garment->Animations[i]);
+            }
         }
         else
         {

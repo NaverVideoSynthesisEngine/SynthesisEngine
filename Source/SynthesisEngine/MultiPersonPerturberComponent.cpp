@@ -44,6 +44,12 @@ void UMultiPersonPerturberComponent::Init(class APhotoRoom* Owner)
     
     SkeletalMesh->bRenderCustomDepth = true;
     SkeletalMesh->CustomDepthStencilValue = Owner->SkeletalMesh->CustomDepthStencilValue;
+    
+    for(int i = 0 ; i < 5; i++)
+    {
+        Garments[i]->bRenderCustomDepth = true;
+        Garments[i]->CustomDepthStencilValue = Owner->Garments[i]->CustomDepthStencilValue;
+    }
 }
 
 void UMultiPersonPerturberComponent::Update()
@@ -72,19 +78,34 @@ void UMultiPersonPerturberComponent::Update()
     
     /*
      1. clothAnimationOffset 으로 어떻게 파편화된 animation frame을 맞추는가?
-     2. GetGarmentByID의 LoadedGarment 의존성 때문에 현재 에러 생기는중 
+        이거 그냥 랜덤하게 Meshes를 고르면 안됨. Human Position에 따라서 골라야 할듯
+        - for 문으로 sort되어있는지 확인해보자
+            - 잘 되어있음
+        - Human Position, Postion Max / Animation Position Max 를 찍어보자
+     2. GetGarmentByID의 LoadedGarment 의존성 때문에 현재 에러 생기는중 (해결)
      */
     float clothAnimationOffset = 0.0f;
     float pos = SkeletalMesh->GetPosition();
     
-    for (int i = 0; i < randClothesMeshes.Num(); i++)
+    /* Debug */
+//    UE_LOG(SynthesisEngine, Error, TEXT("Human Animation Current : %f"), pos);
+    int j = 0;
+    float clothesPos = pos;
+    for ( ; j < randClothesMeshes.Num() && (clothesPos - randClothesAnimations[j]->GetMaxCurrentTime()) > 0 ; j++)
     {
-        UE_LOG(SynthesisEngine, Error, TEXT("Rand Gar"));
-        Garments[i]->SetWorldLocation(location);
-        Garments[i]->SetWorldRotation(randRot);
-        Garments[i]->SetSkeletalMesh(randClothesMeshes[i]);
-        Garments[i]->PlayAnimation(randClothesAnimations[i], false);
-        Garments[i]->GetSingleNodeInstance()->SetPosition(0.0f);
-        Garments[i]->Stop();
+        clothesPos -= randClothesAnimations[j]->GetMaxCurrentTime();
     }
+    
+    Garments[0]->SetWorldLocation(location);
+    Garments[0]->SetWorldRotation(randRot);
+    
+    Garments[0]->SetSkeletalMesh(randClothesMeshes[j]);
+    Garments[0]->PlayAnimation(randClothesAnimations[j], false);
+    Garments[0]->GetSingleNodeInstance()->SetPosition(clothesPos);
+    Garments[0]->Stop();
+    
+//    for (int i = 0; i < randClothesMeshes.Num(); i++)
+//    {
+//
+//    }
 }
