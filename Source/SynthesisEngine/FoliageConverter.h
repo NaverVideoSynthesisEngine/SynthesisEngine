@@ -5,8 +5,10 @@
 #include "SynthesisEngine.h"
 #include "EngineUtils.h"
 #include "GameFramework/Actor.h"
+#include "Components/SceneComponent.h"
 #include "Engine/World.h"
 #include "Engine/StaticMeshActor.h"
+#include "Templates/SharedPointer.h"
 #include "InstancedFoliageActor.h"
 #include "FoliageConverter.generated.h"
 
@@ -14,8 +16,14 @@ UCLASS()
 class SYNTHESISENGINE_API AFoliageConverter : public AActor
 {
 	GENERATED_BODY()
-	
+private:
+    bool IsNearByConverter(TArray<FVector> Positions, FVector foliagePosition);
 public:
+    UPROPERTY(VisibleAnywhere)
+    USceneComponent* SceneComponent;
+    
+    UPROPERTY(EditAnywhere, Category = Option)
+    float Radius = 100.0f;
     
     UPROPERTY(EditAnywhere, Category = Option)
     int CustomStencilValueToApply = 4;
