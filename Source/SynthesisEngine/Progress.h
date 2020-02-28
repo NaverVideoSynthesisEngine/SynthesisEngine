@@ -93,7 +93,7 @@ public: // New features
 
 public: // New feature (02.18) /* for MultiPersonPerturberComponent */
     USkeletalMesh* GetRandomSkeletalMesh();
-    UAnimationAsset* GetRandomHumanAnimation();
+    UAnimationAsset* GetRandomHumanAnimation(USkeleton * Skeleton);
     void GetRandomClothesMeshesAndAnimations(USkeletalMesh * HumanMesh, UAnimationAsset * HumanAnimation,
                                              TArray<USkeletalMesh*>& ClothesMeshes,
                                              TArray<UAnimationAsset*>& ClothesAnimations);

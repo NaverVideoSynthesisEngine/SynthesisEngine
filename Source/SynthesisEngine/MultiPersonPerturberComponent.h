@@ -22,6 +22,11 @@ private:
     FVector GetRandomLocationAroundMainCharacter();
     
     UNavigationSystemV1 * NavSystem;
+    
+    void SetGarment(int index, FVector location, FRotator rotation, USkeletalMesh* mesh, UAnimationAsset* anim, float pos);
+    FString GetNextGarmentID(TArray<USkeletalMesh*> meshes, int index);
+    void CalculateIndexOfValidMeshUsingPosition(TArray<USkeletalMesh*> meshes, TArray<UAnimationAsset*> anims, float pos, FString GarmentID, int& index, float& clothesPos);
+    
 public:
     UPROPERTY(EditAnywhere)
     float MaxRadius = 500.0f;

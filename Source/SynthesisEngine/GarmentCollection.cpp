@@ -470,6 +470,6 @@ TArray<USkeletalMesh*>& ClothesMeshes, TArray<UAnimationAsset*>& ClothesAnimatio
     /* 3. Pick Random Combination. (Combination is initialized on Step 1) And Get Garment */
     int index = rand() % combinations.Num();
     
-    /* 4. UpdateMeshAndAnimationUsingCombination 의 로직처럼 진행 (랜덤하게 뽑은 combination으로) */
+    /* 4. UpdateMeshAndAnimationUsingCombination */
     UpdateMeshAndAnimationUsingCombination(&ClothesMeshes, &ClothesAnimations, garments, combinations[index]);
 }

@@ -318,10 +318,16 @@ USkeletalMesh* FProgress::GetRandomSkeletalMesh()
     return AllModels[randIndex];
 }
 
-UAnimationAsset* FProgress::GetRandomHumanAnimation()
+UAnimationAsset* FProgress::GetRandomHumanAnimation(USkeleton* Skeleton)
 {
-    int randIndex = rand() % AllAnimations.Num();
-    return AllAnimations[randIndex];
+    UAnimationAsset* randAnim;
+    do
+    {
+        int randIndex = rand() % AllAnimations.Num();
+        randAnim = AllAnimations[randIndex];
+    }while(Skeleton != randAnim->GetSkeleton());
+    
+    return randAnim;
 }
 
 void FProgress::GetRandomClothesMeshesAndAnimations(USkeletalMesh * HumanMesh, UAnimationAsset * HumanAnimation, TArray<USkeletalMesh*>& ClothesMeshes, TArray<UAnimationAsset*>& ClothesAnimations)

@@ -52,60 +52,130 @@ void UMultiPersonPerturberComponent::Init(class APhotoRoom* Owner)
     }
 }
 
+void UMultiPersonPerturberComponent::SetGarment(int index, FVector location, FRotator rotation, USkeletalMesh* mesh, UAnimationAsset* anim, float pos)
+{
+    if(!Garments.IsValidIndex(index))
+    {
+        UE_LOG(SynthesisEngine, Error, TEXT("MultiPerson has only 5 Garment slots"));
+        return;
+    }
+    Garments[index]->SetWorldLocation(location);
+    Garments[index]->SetWorldRotation(rotation);
+    Garments[index]->SetSkeletalMesh(mesh);
+    Garments[index]->PlayAnimation(anim, false);
+    Garments[index]->GetSingleNodeInstance()->SetPosition(pos);
+    Garments[index]->Stop();
+
+}
+FString UMultiPersonPerturberComponent::GetNextGarmentID(TArray<USkeletalMesh*> meshes, int index)
+{
+    /* Returns nullptr if there is no next or error.*/
+    if(!meshes.IsValidIndex(index))
+    {
+        UE_LOG(SynthesisEngine, Error, TEXT("Input Index is invalid. Can't Get Next Garmnet ID"));
+        return nullptr;
+    }
+    FString CurrentID = FUtil::ExtractGarmentIdentifierFromFullPath(meshes[index]->GetFullName());
+    if(!meshes.IsValidIndex(index+1))
+    {
+        return nullptr;
+    }
+    for (int i = index+1 ; i < meshes.Num(); i++)
+    {
+        FString NextID = FUtil::ExtractGarmentIdentifierFromFullPath(meshes[i]->GetFullName());
+        if(CurrentID != NextID)
+        {
+            return NextID;
+        }
+    }
+    return nullptr;
+}
+void UMultiPersonPerturberComponent::CalculateIndexOfValidMeshUsingPosition(TArray<USkeletalMesh*> meshes, TArray<UAnimationAsset*> anims, float pos, FString GarmentID, int& index, float& clothesPos)
+{
+    /*
+     Returns Index of 'meshes(anims)'
+     The meshes[Index] is a mesh that should be used this iteration.
+     The anims[Index] is a animation along with human animation position.
+    */
+    int i = 0;
+    while(meshes.IsValidIndex(i) &&FUtil::ExtractGarmentIdentifierFromFullPath(meshes[i]->GetFullName()) != GarmentID)
+    { i++; }
+    
+    if(!meshes.IsValidIndex(i))
+    {
+        UE_LOG(SynthesisEngine, Error, TEXT("The ID %s is not in TArray"), *GarmentID);
+        return;
+    }
+    
+    int j = i;
+    for(; j < anims.Num(); j++)
+    {
+        if(GarmentID != FUtil::ExtractGarmentIdentifierFromFullPath(meshes[j]->GetFullName()))
+        {
+            /* In case 'pos' is bigger than total frame of all animations */
+            index = j-1;
+            clothesPos = anims[index]->GetMaxCurrentTime();
+            return;
+        }
+        if(pos - anims[j]->GetMaxCurrentTime() > 0)
+        {
+            pos -= anims[j]->GetMaxCurrentTime();
+        }
+        else
+        {
+            index = j;
+            clothesPos = pos;
+            return;
+        }
+    }
+    index = j-1;
+    clothesPos = anims[index]->GetMaxCurrentTime();
+}
+
 void UMultiPersonPerturberComponent::Update()
 {
+    /* Human and Human Animation */
     USynthesisEngineInstance* EngineInstance = Cast<USynthesisEngineInstance>(GetWorld()->GetGameInstance());
     FProgress* CurrentProgress = EngineInstance->Progress;
     
     FVector location = GetRandomLocationAroundMainCharacter();
     FRotator randRot = FRotator(0.0f, FMath::RandRange(0.0f, 180.0f), 0.0f);
     
-    UAnimationAsset * randAnim = CurrentProgress->GetRandomHumanAnimation();
+    USkeletalMesh * randMesh = CurrentProgress->GetRandomSkeletalMesh();
+    SkeletalMesh->SetSkeletalMesh(randMesh);
+    
+    UAnimationAsset * randAnim = CurrentProgress->GetRandomHumanAnimation(randMesh->Skeleton);
     float maxTime = randAnim->GetMaxCurrentTime();
     float randPos = FMath::RandRange(0.0f, maxTime);
     
-    USkeletalMesh * randMesh = CurrentProgress->GetRandomSkeletalMesh();
-    SkeletalMesh->SetSkeletalMesh(randMesh);
     SkeletalMesh->PlayAnimation(randAnim, false);
-    SkeletalMesh->SetPosition(FMath::RandRange(0.0f, maxTime));
-    SkeletalMesh->Stop();
     SkeletalMesh->SetWorldLocation(location);
     SkeletalMesh->SetWorldRotation(randRot);
+    SkeletalMesh->SetPosition(randPos);
+    SkeletalMesh->Stop();
     
+    /* Garment and Garment Animation */
     TArray<USkeletalMesh*> randClothesMeshes;
     TArray<UAnimationAsset*> randClothesAnimations;
     CurrentProgress->GetRandomClothesMeshesAndAnimations(randMesh, randAnim, randClothesMeshes, randClothesAnimations);
     
-    /*
-     1. clothAnimationOffset 으로 어떻게 파편화된 animation frame을 맞추는가?
-        이거 그냥 랜덤하게 Meshes를 고르면 안됨. Human Position에 따라서 골라야 할듯
-        - for 문으로 sort되어있는지 확인해보자
-            - 잘 되어있음
-        - Human Position, Postion Max / Animation Position Max 를 찍어보자
-     2. GetGarmentByID의 LoadedGarment 의존성 때문에 현재 에러 생기는중 (해결)
-     */
-    float clothAnimationOffset = 0.0f;
-    float pos = SkeletalMesh->GetPosition();
-    
-    /* Debug */
-//    UE_LOG(SynthesisEngine, Error, TEXT("Human Animation Current : %f"), pos);
-    int j = 0;
-    float clothesPos = pos;
-    for ( ; j < randClothesMeshes.Num() && (clothesPos - randClothesAnimations[j]->GetMaxCurrentTime()) > 0 ; j++)
+    for(const auto & garment : Garments) /* Clear Previous Meshes*/
     {
-        clothesPos -= randClothesAnimations[j]->GetMaxCurrentTime();
+        garment->SetSkeletalMesh(nullptr);
     }
     
-    Garments[0]->SetWorldLocation(location);
-    Garments[0]->SetWorldRotation(randRot);
-    
-    Garments[0]->SetSkeletalMesh(randClothesMeshes[j]);
-    Garments[0]->PlayAnimation(randClothesAnimations[j], false);
-    Garments[0]->GetSingleNodeInstance()->SetPosition(clothesPos);
-    Garments[0]->Stop();
-    
-//    for (int i = 0; i < randClothesMeshes.Num(); i++)
-//    {
-//
-//    }
+    float pos = SkeletalMesh->GetPosition();
+    FString GarmentID = FUtil::ExtractGarmentIdentifierFromFullPath(*randClothesMeshes[0]->GetFullName());
+    for(int i = 0; i < Garments.Num(); i++)
+    {
+        int meshIndex;
+        float clothesPos;
+        CalculateIndexOfValidMeshUsingPosition(randClothesMeshes, randClothesAnimations, pos, GarmentID, meshIndex, clothesPos);
+        SetGarment(i, location, randRot, randClothesMeshes[meshIndex], randClothesAnimations[meshIndex], clothesPos);
+        GarmentID = GetNextGarmentID(randClothesMeshes, meshIndex);
+        if(GarmentID == nullptr)
+        {
+            break;
+        }
+    }
 }
