@@ -142,7 +142,6 @@ private :
           TEXT("Neck"), TEXT("Head"), TEXT("HeadTop_End"),
           TEXT("LeftShoulder"), TEXT("LeftArm"), TEXT("LeftForeArm"), TEXT("LeftHand"), TEXT("LeftPalm"),
           TEXT("RightShoulder"), TEXT("RightArm"), TEXT("RightForeArm"), TEXT("RightHand"), TEXT("RightPalm"),
-          
           TEXT("LeftUpLeg"), TEXT("LeftLeg"), TEXT("LeftFoot"), TEXT("LeftToeBase"), TEXT("LeftToe_End"),
           TEXT("RightUpLeg"), TEXT("RightLeg"), TEXT("RightFoot"), TEXT("RightToeBase"), TEXT("RightToe_End")
          };

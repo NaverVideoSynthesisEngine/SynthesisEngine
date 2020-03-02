@@ -178,7 +178,7 @@ bool FGarmentCollection::WillGarmentCombinationBeChanged()
 {
 	if (LoadedCombinations.Num() == 0)
 	{
-		UE_LOG(SynthesisEngine, Error, TEXT("There is no garment settings."));
+		// UE_LOG(SynthesisEngine, Error, TEXT("There is no garment settings."));
 		return false;
 	}
 	Garment* garment = GetGarmentByID(LoadedGarments, LoadedCombinations[CombinationIndex].GarmentIDs[0]);
@@ -263,6 +263,9 @@ void FGarmentCollection::UpdateMeshAndAnimationUsingCombination(TArray<USkeletal
 {
     TargetMeshes->Empty();
     TargetAnimations->Empty();
+	if (Combination.GarmentIDs == TArray<FString>()) {
+		return;
+	}
     for (const auto& id : Combination.GarmentIDs)
     {
         Garment* garment = GetGarmentByID(TargetGarmentArray ,id);
@@ -462,14 +465,21 @@ TArray<USkeletalMesh*>& ClothesMeshes, TArray<UAnimationAsset*>& ClothesAnimatio
     
     TArray<USkeletalMesh*> meshesToReturn;
     TArray<UAnimationAsset*> animationsToReturn;
-    
-    /* 1. Load Json Setting Locally */
-    LoadJsonSetting(SkeletalMeshID, &(combinations));
-    /* 2. Load Actual Alembic files Locally */
-    LoadAlembics(SkeletalMeshID, AnimationID, &(clothesMeshes), &(clothesAnimations), &(garments));
-    /* 3. Pick Random Combination. (Combination is initialized on Step 1) And Get Garment */
-    int index = rand() % combinations.Num();
-    
-    /* 4. UpdateMeshAndAnimationUsingCombination */
-    UpdateMeshAndAnimationUsingCombination(&ClothesMeshes, &ClothesAnimations, garments, combinations[index]);
+	
+	/* 1. Load Json Setting Locally */
+	LoadJsonSetting(SkeletalMeshID, &(combinations));
+	/* 2. Load Actual Alembic files Locally */
+	LoadAlembics(SkeletalMeshID, AnimationID, &(clothesMeshes), &(clothesAnimations), &(garments));
+	
+	if (combinations.Num() == 0) {
+		UpdateMeshAndAnimationUsingCombination(&ClothesMeshes, &ClothesAnimations, garments, Combination());
+	}
+	else {
+		/* 3. Pick Random Combination. (Combination is initialized on Step 1) And Get Garment */
+		int index = rand() % combinations.Num();
+
+		/* 4. UpdateMeshAndAnimationUsingCombination */
+		UpdateMeshAndAnimationUsingCombination(&ClothesMeshes, &ClothesAnimations, garments, combinations[index]);
+	}
+	
 }

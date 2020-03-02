@@ -73,12 +73,12 @@ FString UMultiPersonPerturberComponent::GetNextGarmentID(TArray<USkeletalMesh*> 
     if(!meshes.IsValidIndex(index))
     {
         UE_LOG(SynthesisEngine, Error, TEXT("Input Index is invalid. Can't Get Next Garmnet ID"));
-        return nullptr;
+        return FString();
     }
     FString CurrentID = FUtil::ExtractGarmentIdentifierFromFullPath(meshes[index]->GetFullName());
     if(!meshes.IsValidIndex(index+1))
     {
-        return nullptr;
+        return FString();
     }
     for (int i = index+1 ; i < meshes.Num(); i++)
     {
@@ -88,7 +88,7 @@ FString UMultiPersonPerturberComponent::GetNextGarmentID(TArray<USkeletalMesh*> 
             return NextID;
         }
     }
-    return nullptr;
+    return FString();
 }
 void UMultiPersonPerturberComponent::CalculateIndexOfValidMeshUsingPosition(TArray<USkeletalMesh*> meshes, TArray<UAnimationAsset*> anims, float pos, FString GarmentID, int& index, float& clothesPos)
 {
@@ -101,7 +101,7 @@ void UMultiPersonPerturberComponent::CalculateIndexOfValidMeshUsingPosition(TArr
     while(meshes.IsValidIndex(i) &&FUtil::ExtractGarmentIdentifierFromFullPath(meshes[i]->GetFullName()) != GarmentID)
     { i++; }
     
-    if(!meshes.IsValidIndex(i))
+    if(!meshes.IsValidIndex(i) && meshes[i] != nullptr)
     {
         UE_LOG(SynthesisEngine, Error, TEXT("The ID %s is not in TArray"), *GarmentID);
         return;
@@ -165,15 +165,25 @@ void UMultiPersonPerturberComponent::Update()
     }
     
     float pos = SkeletalMesh->GetPosition();
-    FString GarmentID = FUtil::ExtractGarmentIdentifierFromFullPath(*randClothesMeshes[0]->GetFullName());
+    FString GarmentID = FString();
+    if (randClothesMeshes.Num() == 0) {}
+    else {
+        FString GarmentID = FUtil::ExtractGarmentIdentifierFromFullPath(*randClothesMeshes[0]->GetFullName());
+    }
     for(int i = 0; i < Garments.Num(); i++)
     {
+        if (randClothesMeshes.Num() == 0) {
+            break;
+        }
         int meshIndex;
         float clothesPos;
         CalculateIndexOfValidMeshUsingPosition(randClothesMeshes, randClothesAnimations, pos, GarmentID, meshIndex, clothesPos);
+        if (randClothesMeshes.Num() <= meshIndex) {
+            break;
+        }
         SetGarment(i, location, randRot, randClothesMeshes[meshIndex], randClothesAnimations[meshIndex], clothesPos);
         GarmentID = GetNextGarmentID(randClothesMeshes, meshIndex);
-        if(GarmentID == nullptr)
+        if(GarmentID == FString())
         {
             break;
         }
