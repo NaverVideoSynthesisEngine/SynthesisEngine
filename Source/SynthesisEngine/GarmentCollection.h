@@ -88,6 +88,10 @@ public: // New features
 	TArray<UAnimationAsset*> GetCurrentClothesAnimations();
 
 public: // New feature (02.20) /* for MultiPersonPerturberComponent */
+    /* params:
+        ClothesMeshes : Can be empty, Especially if there is no combination in json setting file.
+        ClothesAnimations : Can be empty, Especially if there is no combination in json setting file.
+     */
     void GetRandomClothesMeshesAndAnimations(FString SkeletalMeshID, FString AnimationID,
                                              TArray<USkeletalMesh*>& ClothesMeshes, TArray<UAnimationAsset*>& ClothesAnimations);
 };

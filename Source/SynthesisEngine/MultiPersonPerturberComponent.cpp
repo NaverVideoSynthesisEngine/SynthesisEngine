@@ -164,6 +164,11 @@ void UMultiPersonPerturberComponent::Update()
         garment->SetSkeletalMesh(nullptr);
     }
     
+    if(randClothesMeshes.Num() == 0 || randClothesAnimations.Num() == 0)
+    {
+        return;
+    }
+    
     float pos = SkeletalMesh->GetPosition();
     FString GarmentID = FUtil::ExtractGarmentIdentifierFromFullPath(*randClothesMeshes[0]->GetFullName());
     for(int i = 0; i < Garments.Num(); i++)

@@ -94,6 +94,10 @@ public: // New features
 public: // New feature (02.18) /* for MultiPersonPerturberComponent */
     USkeletalMesh* GetRandomSkeletalMesh();
     UAnimationAsset* GetRandomHumanAnimation(USkeleton * Skeleton);
+    /* params:
+       ClothesMeshes : Can be empty, Especially if there is no combination in json setting file.
+       ClothesAnimations : Can be empty, Especially if there is no combination in json setting file.
+    */
     void GetRandomClothesMeshesAndAnimations(USkeletalMesh * HumanMesh, UAnimationAsset * HumanAnimation,
                                              TArray<USkeletalMesh*>& ClothesMeshes,
                                              TArray<UAnimationAsset*>& ClothesAnimations);

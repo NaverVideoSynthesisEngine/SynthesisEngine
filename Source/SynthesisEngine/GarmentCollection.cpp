@@ -465,6 +465,12 @@ TArray<USkeletalMesh*>& ClothesMeshes, TArray<UAnimationAsset*>& ClothesAnimatio
     
     /* 1. Load Json Setting Locally */
     LoadJsonSetting(SkeletalMeshID, &(combinations));
+    /* 1-1. There can be empty combinations */
+    if(combinations.Num() == 0)
+    {
+        return;
+    }
+    
     /* 2. Load Actual Alembic files Locally */
     LoadAlembics(SkeletalMeshID, AnimationID, &(clothesMeshes), &(clothesAnimations), &(garments));
     /* 3. Pick Random Combination. (Combination is initialized on Step 1) And Get Garment */
