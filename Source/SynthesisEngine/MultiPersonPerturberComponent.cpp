@@ -175,8 +175,15 @@ void UMultiPersonPerturberComponent::Update()
     {
         int meshIndex;
         float clothesPos;
+        UMaterialInstance * randMat = CurrentProgress->GetRandomMaterial();
+        
         CalculateIndexOfValidMeshUsingPosition(randClothesMeshes, randClothesAnimations, pos, GarmentID, meshIndex, clothesPos);
         SetGarment(i, location, randRot, randClothesMeshes[meshIndex], randClothesAnimations[meshIndex], clothesPos);
+        for(int j = 0 ; j < Garments[i]->GetNumMaterials(); j++)
+        {
+            Garments[i]->SetMaterial(j, randMat);
+        }
+        
         GarmentID = GetNextGarmentID(randClothesMeshes, meshIndex);
         if(GarmentID.IsEmpty())
         {
