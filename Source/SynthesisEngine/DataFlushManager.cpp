@@ -122,10 +122,10 @@ void FDataFlushManager::FlushToDataMPIFormat(FString path, FString LevelName, FS
     
 }
 
-void FDataFlushManager::FlushToDataTotalFormat_ANNOT(FString path, FString LevelName, FString ActorLabel, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
+void FDataFlushManager::FlushToDataTotalFormat_ANNOT(FString path, FString LevelName, FString ActorLabel, FString CharID, USkeletalMeshComponent* Mesh, UCameraComponent* CameraComponent)
 {
     FString fileName = FString::Printf(TEXT("%012d"), dataID);
-    FString jsonPath = *FString::Printf(TEXT("%s/%s/%s/json/%s.json"), *path, *LevelName, *ActorLabel , *fileName);
+    FString jsonPath = *FString::Printf(TEXT("%s/%s/%s/json/%s/%s.json"), *path, *LevelName, *ActorLabel, *CharID, *fileName);
 
     FTotalAnnotation annotation(this, world, CameraComponent, Mesh, dataID);
 

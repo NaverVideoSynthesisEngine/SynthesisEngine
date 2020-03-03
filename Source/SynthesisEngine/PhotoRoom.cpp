@@ -402,13 +402,13 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
 
         if (EnableDataFlush)
         {
-            DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+            DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), GetActorLabel(), FString::Printf(TEXT("MultiPerson%d"), MultiPersonSocketNumber), SkeletalMesh, this->CameraComponent);
             if(EnableMultiPersonPerturber)
             {
                 for(int i = 0 ; i < MultiPersonSocketNumber; i++)
                 {
                     
-                    DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), MultiPeople[i]->GetName(), MultiPeople[i]->SkeletalMesh, this->CameraComponent);
+                    DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), GetActorLabel(), MultiPeople[i]->GetName(), MultiPeople[i]->SkeletalMesh, this->CameraComponent);
                 }
                 
             }
@@ -498,7 +498,7 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
 
         if (EnableDataFlush)
         {
-            DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+            DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), GetActorLabel(), FString::Printf(TEXT("SinglePerson")), SkeletalMesh, this->CameraComponent);
             DataFlushManager->FlushToDataTotalFormat_IMAGE(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
         }
         UpdatePhase_TOTAL = ETotalUpdatePhase::ENABLE_POSTPROCESSVOLUME;
