@@ -77,6 +77,11 @@ void APhotoRoom::PostInitializeComponents()
     {
         MultiPeople[i]->Init(this);
     }
+    for (int i = 0; i < GarmentSocketNumber; i++)
+    {
+        Garments[i]->bRenderCustomDepth = true;
+        Garments[i]->CustomDepthStencilValue = SkeletalMesh->CustomDepthStencilValue;
+    }
 	AnimationPerturber->OnClothChanged().AddLambda([=]()
 	{
 		if (MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_CLOTH_IS_CHANGED)
