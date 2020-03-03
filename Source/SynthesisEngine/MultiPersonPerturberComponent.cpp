@@ -41,14 +41,15 @@ void UMultiPersonPerturberComponent::Init(class APhotoRoom* Owner)
 {
     this->Owner = Owner;
     this->NavSystem = Cast<UNavigationSystemV1>(GetWorld()->GetNavigationSystem());
+    int stencilValue = Owner->GetUniqueCustomStencilValueAndIncreaseIt();
     
     SkeletalMesh->bRenderCustomDepth = true;
-    SkeletalMesh->CustomDepthStencilValue = Owner->SkeletalMesh->CustomDepthStencilValue;
+    SkeletalMesh->CustomDepthStencilValue = stencilValue;
     
     for(int i = 0 ; i < 5; i++)
     {
         Garments[i]->bRenderCustomDepth = true;
-        Garments[i]->CustomDepthStencilValue = Owner->Garments[i]->CustomDepthStencilValue;
+        Garments[i]->CustomDepthStencilValue = stencilValue;
     }
 }
 

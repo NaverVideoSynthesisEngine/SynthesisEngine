@@ -527,6 +527,11 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
     }
 }
 
+int APhotoRoom::GetUniqueCustomStencilValueAndIncreaseIt()
+{
+    return (SkeletalMesh->CustomDepthStencilValue + (++MultiPerson_CustomDepthID));
+}
+
 bool APhotoRoom::CheckIteration()
 {
 	IterationIndex++;

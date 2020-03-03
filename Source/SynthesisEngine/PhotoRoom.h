@@ -59,6 +59,9 @@ private:
 
 	int FixedCameraIndex = 0;
 	int IterationIndex = 0;
+    
+    // For unique custom depth value;
+    int MultiPerson_CustomDepthID = 0;
 
 	TArray<USceneComponent*> CameraPoints;
 public:
@@ -111,7 +114,6 @@ public: //Multiple Clothes
     static const int MultiPersonSocketNumber;
     UPROPERTY(VisibleAnywhere)
     TArray<class UMultiPersonPerturberComponent*> MultiPeople;
-    //MultiPeople garments도 추후에 필요할듯
 
 protected:
 	// Called when the game starts or when spawned
@@ -140,6 +142,9 @@ public:
 	void SkipClothes();
 
 	bool CheckIteration();
+    
+    /* 2020.03.03 To Assign Uniqu Stencil Value to MultiPerson */
+    int GetUniqueCustomStencilValueAndIncreaseIt();
 
 public :
 	DECLARE_EVENT(APhotoRoom, FProcessDone)
