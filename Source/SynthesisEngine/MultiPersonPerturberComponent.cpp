@@ -73,12 +73,12 @@ FString UMultiPersonPerturberComponent::GetNextGarmentID(TArray<USkeletalMesh*> 
     if(!meshes.IsValidIndex(index))
     {
         UE_LOG(SynthesisEngine, Error, TEXT("Input Index is invalid. Can't Get Next Garmnet ID"));
-        return nullptr;
+        return FString();
     }
     FString CurrentID = FUtil::ExtractGarmentIdentifierFromFullPath(meshes[index]->GetFullName());
     if(!meshes.IsValidIndex(index+1))
     {
-        return nullptr;
+        return FString();
     }
     for (int i = index+1 ; i < meshes.Num(); i++)
     {
@@ -88,7 +88,7 @@ FString UMultiPersonPerturberComponent::GetNextGarmentID(TArray<USkeletalMesh*> 
             return NextID;
         }
     }
-    return nullptr;
+    return FString();
 }
 void UMultiPersonPerturberComponent::CalculateIndexOfValidMeshUsingPosition(TArray<USkeletalMesh*> meshes, TArray<UAnimationAsset*> anims, float pos, FString GarmentID, int& index, float& clothesPos)
 {
@@ -178,7 +178,7 @@ void UMultiPersonPerturberComponent::Update()
         CalculateIndexOfValidMeshUsingPosition(randClothesMeshes, randClothesAnimations, pos, GarmentID, meshIndex, clothesPos);
         SetGarment(i, location, randRot, randClothesMeshes[meshIndex], randClothesAnimations[meshIndex], clothesPos);
         GarmentID = GetNextGarmentID(randClothesMeshes, meshIndex);
-        if(GarmentID == nullptr)
+        if(GarmentID.IsEmpty())
         {
             break;
         }
