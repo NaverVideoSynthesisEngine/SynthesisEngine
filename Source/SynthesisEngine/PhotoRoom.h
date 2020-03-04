@@ -87,6 +87,9 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Option)
 	int LATE_DATA_FLUSHING_Frame_to_Skip = 2;
+    
+    UPROPERTY(EditAnywhere, Category = Option)
+    int MultiPersonCount = 3;
 
 	UPROPERTY(EditAnywhere, Category = Option)
 	EUpdateProtocol MaterialPerturberUpdateProtocol = EUpdateProtocol::UPDATE_EVERY_FRAME;

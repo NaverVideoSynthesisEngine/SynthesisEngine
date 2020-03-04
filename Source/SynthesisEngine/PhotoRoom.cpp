@@ -373,9 +373,9 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
             
         if (EnableMultiPersonPerturber)
         {
-            for(UMultiPersonPerturberComponent * multi : MultiPeople)
+            for(int i = 0 ; i < MultiPersonCount && i < MultiPersonSocketNumber; i++)
             {
-                multi->Update();
+                MultiPeople[i]->Update();
             }
         }
             
@@ -405,9 +405,8 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
             DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
             if(EnableMultiPersonPerturber)
             {
-                for(int i = 0 ; i < MultiPersonSocketNumber; i++)
+                for(int i = 0 ; i < MultiPersonSocketNumber &&  i < MultiPersonCount ; i++)
                 {
-                    
                     DataFlushManager->FlushToDataTotalFormat_ANNOT(path, *GetWorld()->GetName(), MultiPeople[i]->GetName(), MultiPeople[i]->SkeletalMesh, this->CameraComponent);
                 }
                 
