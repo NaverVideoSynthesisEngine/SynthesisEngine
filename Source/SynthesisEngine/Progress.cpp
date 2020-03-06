@@ -337,5 +337,3 @@ void FProgress::GetRandomClothesMeshesAndAnimations(USkeletalMesh * HumanMesh, U
     
     LoadedGarments->GetRandomClothesMeshesAndAnimations(SkeletonMeshID, AnimationID, ClothesMeshes, ClothesAnimations);
 }
-
-

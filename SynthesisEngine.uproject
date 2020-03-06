@@ -25,6 +25,14 @@
 		{
 			"Name": "SequencerScripting",
 			"Enabled": true
+		},
+		{
+			"Name": "ScriptPlugin",
+			"Enabled": true
+		},
+		{
+			"Name": "SunPosition",
+			"Enabled": true
 		}
 	]
 }

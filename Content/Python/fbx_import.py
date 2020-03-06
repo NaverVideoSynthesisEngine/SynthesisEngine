@@ -5,8 +5,8 @@ import time
 
 def checkExist(char_name, asset_name):
     #chars_folder_dir = "D:/ChangHun/sourcetree/SynthesisEngine/Content/Animations/NewFBX"
-    chars_folder_dir = "D:/ChangHun/sourcetree/SynthesisEngine/Content/Animations/Toy/FBX"
-    
+    chars_folder_dir = "D:/workspace/SynthesisEngine/Content/Animations/Toy/FBX"
+
     uasset_dir = os.path.join(chars_folder_dir, char_name)
     uasset_path = os.path.join(uasset_dir, "{}.uasset".format(asset_name))
     return os.path.isfile(uasset_path)
@@ -67,9 +67,7 @@ def buildAnimationImportOptions(skeleton_path='', physics_path=''):
 def Run():
     print("import start.")
     game_path = r"/Game"
-    #fbx_folder_path = "D:\\ChangHun\\sourcetree\\SynthesisEngine\\MixamoDownload\\DownloadedAnimations"
-    #fbx_folder_path = "D:\\ChangHun\\sourcetree\\SynthesisEngine\\ObjSeqUploadAndConvert\\2.Workspace\\FBX\\temp"
-    fbx_folder_path = "D:\\ChangHun\\sourcetree\\SynthesisEngine\\ObjSeqUploadAndConvert\\2.Workspace\\FBX"
+    fbx_folder_path = "D:/workspace/MixamoDownload/Toy_FBX"
     chars = os.listdir(fbx_folder_path)
     print(chars)
     for char in chars:
@@ -86,14 +84,17 @@ def Run():
 
             fbx_file_path = os.path.join(cur_fbx_folder_path, fbx_file)
             unreal.log("import {}".format(fbx_file_path))
-            fbx_options = buildAnimationImportOptions('/Game/Models/NewModels/{0}_Skeleton.{0}_Skeleton'.format(char), '/Game/Models/NewModels/{0}_material/{0}_PhysicsAsset.{0}_PhysicsAsset'.format(char))
+            fbx_options = buildAnimationImportOptions('/Game/Models/{0}_Skeleton.{0}_Skeleton'.format(char), '/Game/Models/{0}_material/{0}_PhysicsAsset.{0}_PhysicsAsset'.format(char))
             import_task = buildImportTask(fbx_file_path, cur_char_game_folder_path, fbx_options)
             executeImportTasks([import_task])
 
             # postprocess
             res_skel_path = cur_char_game_folder_path + "/{0}.{0}".format(asset_name)
-            anim_path = cur_char_game_folder_path + "/{0}_Anim.{0}_Anim".format(asset_name)
+            # anim_path = cur_char_game_folder_path + "/{0}_Anim.{0}_Anim".format(asset_name)
+            take_one = cur_char_game_folder_path + "/{0}_Anim_Take_001.{0}_Anim_Take_001".format(asset_name)
+            anim_path = cur_char_game_folder_path + "/{0}_Anim_mixamo_com.{0}_Anim_mixamo_com".format(asset_name)
             deleteAsset(res_skel_path)
+            deleteAsset(take_one)
             renameAsset(anim_path, res_skel_path)
             saveAsset(res_skel_path)
             time.sleep(1)
