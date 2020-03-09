@@ -1,9 +1,9 @@
 import unreal
 import os
-from random import randint
 
-is_mac = True
-is_blade = False
+
+is_mac = False
+is_blade = True
 is_naver = False
 
 if is_mac:
@@ -14,6 +14,14 @@ elif is_blade:
 
 elif is_naver:
     content_dir = "D:/workspace/SynthesisEngine/Content"
+
+
+def load_model(name):
+    model_path = "/Game/Models/{0}.{1}".format(name, name)
+    skel_path = "/Game/Models/{0}_Skeleton.{1}_Skeleton".format(name, name)
+    unreal.load_asset(model_path)
+    unreal.load_asset(skel_path)
+
 
 def load_models():
     unreal.load_asset('/Game/Models/Female.Female')
@@ -83,12 +91,13 @@ def load_alembic2(char, indices):
                 unreal.load_asset("{0}/{1}.{1}".format(cloth_path, abc_file[:-7]))
 
 
-def load_material(name, material=randint(1, 30)):
+def load_material(name):
     game_mat_path = '/Game/Materials/{}'.format(name)
-    local_mat_path = "{}/Materials/{}".format(name)
+    local_mat_path = '{}/Materials/{}'.format(content_dir, name)
+
     assets = os.listdir(local_mat_path)
-    asset = assets[material]
-    unreal.load_asset("{0}/{1}.{1}".format(game_mat_path, asset[:-7]))
+    for asset in assets:
+        unreal.load_asset("{0}/{1}.{1}".format(game_mat_path, asset[:-7]))
 
 
 def load_materials(name, materials):
@@ -119,3 +128,17 @@ def init():
     load_materials('Denim', list(range(14)))
     # load_material('Canvas')
     # load_material('Wool')
+
+
+def debug_init():
+    global is_mac
+    is_mac = True
+    load_model('Male')
+    load_model('Female')
+
+    load_fbx('Male', 0, 2)
+    load_fbx('Female', 0, 2)
+    unreal.load_asset('/Game/Levels/ToyDatasetLevels/Playground_Toy.Playground_Toy')
+    unreal.load_asset('/Game/Levels/ToyDatasetLevels/EnvironmentSet_Toy.EnvironmentSet_Toy')
+    load_material('Unrealistic')
+    is_mac = False
