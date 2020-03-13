@@ -343,6 +343,8 @@ public:
     UPROPERTY(EditAnywhere)
         FRotator RComp;
     UPROPERTY(EditAnywhere)
+        int stencil_value;
+    UPROPERTY(EditAnywhere)
         TArray<float> camera_intrinsic;
     UPROPERTY(EditAnywhere)
         TArray<float> annot2;
@@ -369,7 +371,7 @@ public:
             this->annot2.Add(screenCoord.X);
             this->annot2.Add(screenCoord.Y);
         }
-
+        this->stencil_value = Mesh->CustomDepthStencilValue;
         this->TComp = Camera->GetComponentLocation();
         this->RComp = Camera->GetComponentRotation();
 
