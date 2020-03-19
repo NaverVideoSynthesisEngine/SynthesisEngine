@@ -7,7 +7,7 @@
 
 const int APhotoRoom::GarmentSocketNumber = 5;
 const int APhotoRoom::MultiPersonSocketNumber = 3;
-const FString APhotoRoom::WindowPath = FString(TEXT("C:/Users/SeungChanJeong/Desktop/Temp"));
+const FString APhotoRoom::WindowPath = FString(TEXT("D:/workspace/SynthesisEngine/ProtoOutputs"));
 const FString APhotoRoom::MacPath = FString(TEXT("/Users/chan/Desktop/Naver/ProtoOutputs"));
 // Sets default values
 APhotoRoom::APhotoRoom()
