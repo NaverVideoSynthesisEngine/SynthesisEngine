@@ -118,6 +118,8 @@ public: //Multiple Clothes
     UPROPERTY(VisibleAnywhere)
     TArray<class UMultiPersonPerturberComponent*> MultiPeople;
 
+	static const FString WindowPath;
+	static const FString MacPath;
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;

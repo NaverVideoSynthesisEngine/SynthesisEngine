@@ -45,7 +45,7 @@ void UMultiPersonPerturberComponent::Init(class APhotoRoom* Owner)
     
     SkeletalMesh->bRenderCustomDepth = true;
     SkeletalMesh->CustomDepthStencilValue = stencilValue;
-    
+    SkeletalMesh->SetCollisionProfileName(TEXT("PhysicsActor"));
     for(int i = 0 ; i < 5; i++)
     {
         Garments[i]->bRenderCustomDepth = true;

@@ -7,7 +7,8 @@
 
 const int APhotoRoom::GarmentSocketNumber = 5;
 const int APhotoRoom::MultiPersonSocketNumber = 3;
-
+const FString APhotoRoom::WindowPath = FString(TEXT("C:/Users/SeungChanJeong/Desktop/Temp"));
+const FString APhotoRoom::MacPath = FString(TEXT("/Users/chan/Desktop/Naver/ProtoOutputs"));
 // Sets default values
 APhotoRoom::APhotoRoom()
 {
@@ -190,7 +191,7 @@ void APhotoRoom::Update()
 	if (EnableMaterialPerturber && MaterialPerturberUpdateProtocol == EUpdateProtocol::UPDATE_EVERY_FRAME)
 		MaterialPerturber->Update();
 	if (EnableDataFlush) 
-		DataFlushManager->FlushToData(TEXT("D:/workspace/SynthesisEngine/ProtoOutputs"), *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
+		DataFlushManager->FlushToData(WindowPath, *GetWorld()->GetName(), GetActorLabel(), SkeletalMesh, this->CameraComponent);
 	
 	if (b_FirstUpdate && PerturbCameraAndMaterialOnStart)
 	{
@@ -225,11 +226,11 @@ void APhotoRoom::UpdateWithLateDataFlushing()
         FString platform = UGameplayStatics::GetPlatformName();
         if(platform == TEXT("Mac"))
         {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+            path = MacPath;
         }
         else
         {
-            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+            path = WindowPath;
         }
 		if(LateDataFlushingCount == LATE_DATA_FLUSHING_Frame_to_Skip)
 		{
@@ -272,11 +273,11 @@ void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
             platform = UGameplayStatics::GetPlatformName();
             if(platform == TEXT("Mac"))
             {
-                path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+                path = MacPath;
             }
             else
             {
-                path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+                path = WindowPath;
             }
             
             if (EnableDataFlush)
@@ -293,11 +294,11 @@ void APhotoRoom::UpdateWithLateDataFlushing_COCOTEMP()
             platform = UGameplayStatics::GetPlatformName();
             if(platform == TEXT("Mac"))
             {
-                path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+                path = MacPath;
             }
             else
             {
-                path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+                path = WindowPath;
             }
             
             if (EnableDataFlush)
@@ -337,11 +338,11 @@ void APhotoRoom::UpdateWithLateDataFlushing_MPITEMP()
         FString platform = UGameplayStatics::GetPlatformName();
         if(platform == TEXT("Mac"))
         {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+            path = MacPath;
         }
         else
         {
-            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+            path = WindowPath;
         }
         if(LateDataFlushingCount == LATE_DATA_FLUSHING_Frame_to_Skip)
         {
@@ -393,11 +394,11 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
         platform = UGameplayStatics::GetPlatformName();
         if (platform == TEXT("Mac"))
         {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+            path = MacPath;
         }
         else
         {
-            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+            path = WindowPath;
         }
 
         if (EnableDataFlush)
@@ -425,11 +426,11 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL()
         platform = UGameplayStatics::GetPlatformName();
         if (platform == TEXT("Mac"))
         {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+            path = MacPath;
         }
         else
         {
-            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+            path = WindowPath;
         }
 
         if (EnableDataFlush)
@@ -488,11 +489,11 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
         platform = UGameplayStatics::GetPlatformName();
         if (platform == TEXT("Mac"))
         {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+            path = MacPath;
         }
         else
         {
-            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+            path = WindowPath;
         }
 
         if (EnableDataFlush)
@@ -512,11 +513,11 @@ void APhotoRoom::UpdateWithLateDataFlushing_TOTAL_FIXEDCAMERA()
         platform = UGameplayStatics::GetPlatformName();
         if (platform == TEXT("Mac"))
         {
-            path = TEXT("/Users/chan/Desktop/Naver/ProtoOutputs");
+            path = MacPath;
         }
         else
         {
-            path = TEXT("D:/workspace/SynthesisEngine/ProtoOutputs");
+            path = WindowPath;
         }
 
         if (EnableDataFlush)
